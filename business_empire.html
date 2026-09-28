@@ -1,0 +1,2891 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Empire</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-dark: #0a0a14; --bg-panel: #15152a; --bg-card: #1e1e35;
+    --bg-card-hover: #26264a; --accent: #7f5af0; --accent2: #2cb67d;
+    --green: #2cb67d; --green-light: #7CFC00; --red: #e53170; --gold: #ffd700;
+    --text: #fffffe; --text-dim: #94a1b2; --border: #2a2a45; --blue: #3498db;
+    --orange: #ff9f1c; --purple: #9b59b6;
+    --btn-green: #1db954; --btn-red: #c0392b; --btn-disabled: #333350;
+    --rar-common: #8a8a9a; --rar-rare: #3498db; --rar-epic: #9b59b6;
+    --rar-legendary: #ffd700; --rar-mythic: #e53170;
+  }
+  html, body { height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px;
+    -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+
+  /* Анимированный фон */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(127,90,240,0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(44,182,125,0.06) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(255,215,0,0.03) 0%, transparent 60%);
+    animation: bgShift 20s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes bgShift {
+    from { transform: scale(1) rotate(0deg); }
+    to { transform: scale(1.15) rotate(3deg); }
+  }
+  #menu, #game { position: relative; z-index: 1; }
+
+  /* ==================== МЕНЮ ==================== */
+  #menu {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at top, #1a1a3e 0%, #0a0a14 70%);
+    display: flex; align-items: center; justify-content: center;
+    overflow-y: auto; z-index: 100; padding: 20px;
+  }
+  .menu-content {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; gap: 12px; text-align: center;
+    max-width: 520px; width: 100%;
+    animation: menuAppear 0.8s ease-out;
+  }
+  @keyframes menuAppear {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .menu-title {
+    font-size: 72px; font-weight: 900; letter-spacing: 8px; line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, #7f5af0 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 60px rgba(127,90,240,0.4);
+    animation: titleGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes titleGlow {
+    from { filter: drop-shadow(0 0 20px rgba(127,90,240,0.3)); }
+    to { filter: drop-shadow(0 0 40px rgba(127,90,240,0.6)); }
+  }
+  .menu-title-2 {
+    font-size: 72px; font-weight: 900; letter-spacing: 8px; line-height: 1;
+    background: linear-gradient(90deg, #7f5af0, #2cb67d, #ffd700, #7f5af0);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: gradientMove 6s linear infinite;
+  }
+  @keyframes gradientMove {
+    from { background-position: 0% 50%; }
+    to { background-position: 300% 50%; }
+  }
+  .menu-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 30px; letter-spacing: 1px; }
+  .menu-btn {
+    width: 100%; padding: 16px 24px; font-size: 15px; font-weight: 700;
+    color: var(--text); background: rgba(30,30,53,0.7);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent); border-radius: 12px;
+    transition: all 0.2s ease; letter-spacing: 1px;
+    position: relative; overflow: hidden;
+  }
+  .menu-btn::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%); transition: transform 0.5s;
+  }
+  .menu-btn:hover:not(:disabled)::before { transform: translateX(100%); }
+  .menu-btn:hover:not(:disabled) {
+    background: var(--accent); transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(127,90,240,0.4);
+  }
+  .menu-btn.green { border-color: var(--accent2); }
+  .menu-btn.green:hover:not(:disabled) { background: var(--accent2); box-shadow: 0 8px 24px rgba(44,182,125,0.4); }
+  .menu-btn.blue { border-color: var(--blue); }
+  .menu-btn.blue:hover:not(:disabled) { background: var(--blue); box-shadow: 0 8px 24px rgba(52,152,219,0.4); }
+  .menu-btn.red { border-color: var(--red); }
+  .menu-btn.red:hover:not(:disabled) { background: var(--red); box-shadow: 0 8px 24px rgba(229,49,112,0.4); }
+  .menu-btn:disabled { opacity: 0.35; }
+  .save-info {
+    font-size: 12px; color: var(--text-dim);
+    margin-top: 20px; line-height: 1.6; padding: 10px 20px;
+    background: rgba(30,30,53,0.5); border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  /* ==================== ИГРА ==================== */
+  #game { display: none; flex-direction: column; height: 100vh; }
+  #game.active { display: flex; }
+
+  .top-bar {
+    background: linear-gradient(180deg, var(--bg-panel) 0%, rgba(21,21,42,0.95) 100%);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .top-section { display: flex; flex-direction: column; gap: 3px; min-width: 150px; }
+  .top-section.center { align-items: center; }
+  .top-section.right { align-items: flex-end; }
+  .label-small {
+    font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;
+  }
+  .balance {
+    font-size: 26px; font-weight: 900;
+    color: var(--green-light); line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 20px rgba(124,252,0,0.3);
+    transition: all 0.3s;
+  }
+  .balance.negative { color: var(--red); text-shadow: 0 0 20px rgba(229,49,112,0.3); }
+  .stat-line {
+    font-size: 12px; font-weight: 600;
+    display: flex; gap: 8px; align-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .event-bar {
+    background: var(--bg-panel);
+    padding: 8px 20px; font-size: 12px;
+    text-align: center; color: var(--gold);
+    min-height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+  .event-bar.active {
+    background: linear-gradient(90deg, #3a1f2e, #2a1520, #3a1f2e);
+    background-size: 200% 100%;
+    animation: eventPulse 2s ease-in-out infinite;
+  }
+  .event-bar.positive {
+    background: linear-gradient(90deg, #1f3a2e, #142a20, #1f3a2e);
+    background-size: 200% 100%;
+    animation: eventPulse 2s ease-in-out infinite;
+  }
+  @keyframes eventPulse {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .tabs {
+    background: var(--bg-dark); padding: 8px 12px;
+    display: flex; gap: 4px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 16px; font-size: 12px; font-weight: 700;
+    color: var(--text); background: var(--bg-panel);
+    border: 1px solid transparent; border-radius: 8px;
+    transition: all 0.2s ease; letter-spacing: 0.3px;
+    position: relative;
+  }
+  .tab:hover { background: var(--bg-card-hover); }
+  .tab.active {
+    background: var(--accent);
+    box-shadow: 0 4px 16px rgba(127,90,240,0.4);
+  }
+  .tab-right { margin-left: auto; }
+  .tab.save { background: var(--accent2); }
+  .tab.save:hover { background: #35d18f; }
+  .tab.danger { background: var(--red); }
+  .tab.danger:hover { background: #f05080; }
+  .tab.menu-btn { background: var(--purple); }
+  .tab.menu-btn:hover { background: #a569bd; }
+  .tab.leaders { background: var(--gold); color: #000; }
+  .tab.leaders:hover { background: #ffe94d; }
+
+  .content { flex: 1; overflow-y: auto; padding: 14px; scroll-behavior: smooth; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .content-header {
+    font-size: 12px; color: var(--text-dim);
+    margin-bottom: 12px; padding: 6px 4px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+
+  /* ==================== КАРТОЧКИ ==================== */
+  .card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+    transition: all 0.2s ease;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: transparent;
+    transition: background 0.3s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .card:hover::before { background: var(--accent); }
+  .card-icon {
+    font-size: 34px; flex-shrink: 0; line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+  .card-main { flex: 1; min-width: 200px; }
+  .card-title {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin-bottom: 3px; letter-spacing: 0.2px;
+  }
+  .card-sub {
+    font-size: 11px; color: var(--text-dim);
+    margin-bottom: 6px; line-height: 1.4;
+  }
+  .card-info {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    font-size: 12px; color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .card-info b { color: var(--text); font-weight: 700; }
+  .card-actions {
+    display: flex; flex-direction: column; gap: 6px;
+    flex-shrink: 0; min-width: 200px;
+  }
+
+  /* ==================== КНОПКИ ==================== */
+  .buy-btn {
+    padding: 10px 14px; font-size: 12px; font-weight: 700;
+    color: #fff; background: var(--btn-red);
+    border: none; border-radius: 8px;
+    transition: all 0.15s ease;
+    white-space: pre-line; line-height: 1.35;
+    text-align: center; letter-spacing: 0.3px;
+  }
+  .buy-btn.affordable {
+    background: linear-gradient(135deg, var(--btn-green), #16a34a);
+    box-shadow: 0 2px 8px rgba(29,185,84,0.3);
+  }
+  .buy-btn:disabled { background: var(--btn-disabled); color: #666; box-shadow: none; }
+  .buy-btn:not(:disabled):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .buy-btn:not(:disabled):active { transform: translateY(0); }
+
+  /* ==================== ГРАФИК ==================== */
+  .mini-graph {
+    height: 60px; background: var(--bg-dark);
+    border-radius: 6px; margin: 6px 0;
+    overflow: hidden; border: 1px solid var(--border);
+  }
+  .mini-graph canvas { display: block; width: 100%; height: 100%; }
+
+  /* ==================== БИРЖА ==================== */
+  .market-buttons { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .market-btn {
+    flex: 1; min-width: 70px; padding: 7px 6px;
+    font-size: 11px; font-weight: 700; color: #fff;
+    background: var(--btn-red); border: none; border-radius: 6px;
+    transition: all 0.15s ease;
+    white-space: pre-line; line-height: 1.25;
+  }
+  .market-btn.affordable { background: var(--btn-green); }
+  .market-btn:disabled { background: var(--btn-disabled); color: #666; }
+  .market-btn:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.15); }
+
+  /* ==================== УЛУЧШЕНИЯ ==================== */
+  .upgrade-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 16px;
+    transition: all 0.2s ease;
+  }
+  .upgrade-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .upgrade-icon { font-size: 34px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+  .upgrade-main { flex: 1; }
+  .upgrade-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .upgrade-desc { font-size: 12px; color: var(--text-dim); }
+  .upgrade-level { font-size: 11px; color: var(--accent); margin-top: 4px; }
+  .upgrade-buy {
+    padding: 12px 20px; font-size: 13px; font-weight: 700;
+    background: var(--btn-red); color: #fff; border: none;
+    border-radius: 8px; min-width: 130px;
+    transition: all 0.15s ease;
+  }
+  .upgrade-buy.affordable {
+    background: linear-gradient(135deg, var(--btn-green), #16a34a);
+    box-shadow: 0 2px 8px rgba(29,185,84,0.3);
+  }
+  .upgrade-buy:disabled { background: var(--btn-disabled); color: #666; }
+  .upgrade-buy:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.15); }
+
+  /* ==================== КАЗИНО ==================== */
+  .casino-top {
+    background: var(--bg-card); padding: 14px; border-radius: 10px;
+    margin-bottom: 12px; display: flex; flex-wrap: wrap;
+    align-items: center; gap: 8px;
+    border: 1px solid var(--border);
+  }
+  .casino-top label { font-weight: 700; font-size: 13px; }
+  .casino-top input {
+    padding: 9px 12px; background: var(--bg-panel); color: var(--text);
+    border: 2px solid var(--border); border-radius: 6px;
+    font-size: 14px; width: 150px; font-family: inherit;
+    transition: border-color 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .casino-top input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(127,90,240,0.15);
+  }
+  .casino-top input.error { border-color: var(--red); animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .quick-bet {
+    padding: 9px 12px; background: var(--bg-panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .quick-bet:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+  .quick-bet.max {
+    background: linear-gradient(135deg, var(--purple), #7f3f9b);
+    border-color: var(--purple); color: #fff;
+  }
+  .casino-stats {
+    background: var(--bg-panel); padding: 10px 14px;
+    border-radius: 8px; font-size: 12px;
+    color: var(--text-dim); margin-bottom: 14px;
+    border: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .casino-games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  .casino-game {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border: 2px solid var(--purple);
+    border-radius: 14px; padding: 18px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 4px 24px rgba(155,89,182,0.15);
+  }
+  .casino-game.bj {
+    border-color: var(--accent2);
+    box-shadow: 0 4px 24px rgba(44,182,125,0.15);
+  }
+  .casino-game.slots {
+    border-color: var(--gold);
+    box-shadow: 0 4px 24px rgba(255,215,0,0.15);
+  }
+  .game-title {
+    font-size: 20px; font-weight: 800; text-align: center;
+    color: var(--gold); padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 1px;
+  }
+
+  /* РУЛЕТКА */
+  .roulette-result {
+    font-size: 110px; font-weight: 900; text-align: center;
+    padding: 20px 10px; min-height: 200px; line-height: 1;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a14 100%);
+    border-radius: 14px;
+    border: 3px solid var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 40px rgba(127,90,240,0.3), 0 0 30px rgba(127,90,240,0.4);
+    position: relative; overflow: hidden;
+    transition: all 0.4s ease;
+  }
+  .roulette-result.spin::before {
+    content: ""; position: absolute; inset: 0;
+    background: conic-gradient(from 0deg,
+      #e53170 0deg, #000 30deg, #e53170 60deg, #000 90deg,
+      #e53170 120deg, #000 150deg, #e53170 180deg, #000 210deg,
+      #e53170 240deg, #000 270deg, #e53170 300deg, #000 330deg, #e53170 360deg);
+    opacity: 0.3;
+    animation: rouletteWheel 1s linear infinite;
+    border-radius: 50%;
+    transform: scale(0.9);
+  }
+  @keyframes rouletteWheel {
+    from { transform: scale(0.9) rotate(0deg); }
+    to { transform: scale(0.9) rotate(360deg); }
+  }
+  .roulette-result.spin {
+    animation: roulettePulse 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes roulettePulse {
+    from { box-shadow: inset 0 0 40px rgba(127,90,240,0.3), 0 0 30px rgba(127,90,240,0.4); }
+    to { box-shadow: inset 0 0 80px rgba(255,215,0,0.5), 0 0 50px rgba(255,215,0,0.7); }
+  }
+  .roulette-result .roulette-num {
+    position: relative; z-index: 1;
+    text-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+    transition: all 0.2s;
+  }
+  .roulette-info {
+    text-align: center; font-size: 13px; color: var(--text-dim);
+    min-height: 42px; line-height: 1.4; padding: 8px;
+    background: var(--bg-dark); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+  }
+  .roulette-buttons {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .roulette-btn {
+    padding: 14px 8px; font-size: 13px; font-weight: 700;
+    color: #fff; background: var(--btn-red); border: none;
+    border-radius: 8px; transition: all 0.15s;
+  }
+  .roulette-btn.affordable {
+    background: linear-gradient(135deg, var(--purple), #7f3f9b);
+    box-shadow: 0 2px 12px rgba(155,89,182,0.3);
+  }
+  .roulette-btn:disabled { background: var(--btn-disabled); color: #666; }
+  .roulette-btn:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+  /* БЛЭКДЖЕК */
+  .bj-table {
+    background: linear-gradient(180deg, #0a3d2c 0%, #052419 100%);
+    border-radius: 14px; padding: 18px;
+    min-height: 340px;
+    display: flex; flex-direction: column; gap: 18px;
+    border: 2px solid #1a5a3f;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+  }
+  .bj-section { display: flex; flex-direction: column; gap: 8px; min-height: 140px; }
+  .bj-label {
+    font-size: 12px; color: #a8d5ba; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    display: flex; justify-content: space-between;
+    align-items: center; height: 22px;
+  }
+  .bj-label .bj-score {
+    color: var(--gold); font-size: 17px;
+    background: rgba(0,0,0,0.5); padding: 3px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,215,0,0.3);
+  }
+  .bj-cards {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    min-height: 112px; align-items: flex-start;
+  }
+  .playing-card {
+    width: 76px; height: 110px;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    border-radius: 8px; border: 1px solid #999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-weight: 900; position: relative;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+    color: #000; flex-shrink: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .playing-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+  .playing-card.red { color: #d32f2f; }
+  .playing-card.black { color: #000; }
+  .playing-card .card-rank {
+    font-size: 26px; line-height: 1;
+    position: absolute; top: 8px; left: 10px;
+  }
+  .playing-card .card-suit-big { font-size: 48px; line-height: 1; }
+  .playing-card .card-suit-small {
+    font-size: 18px; line-height: 1;
+    position: absolute; bottom: 8px; right: 10px;
+    transform: rotate(180deg);
+  }
+  .playing-card.back {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b5bdb 100%);
+    border: 2px solid #fff; position: relative; overflow: hidden;
+  }
+  .playing-card.back::before {
+    content: ""; position: absolute; inset: 6px;
+    background: repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 3px,
+      transparent 3px, transparent 8px);
+    border-radius: 4px;
+  }
+  .playing-card.back::after {
+    content: "🂠"; font-size: 48px; color: rgba(255,255,255,0.85);
+    position: relative; z-index: 1;
+  }
+  .bj-status {
+    text-align: center;
+    background: var(--bg-dark);
+    padding: 12px; border-radius: 8px;
+    min-height: 50px;
+    font-size: 13px; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+  .bj-buttons {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  }
+  .bj-btn {
+    padding: 14px 6px; font-size: 13px; font-weight: 700;
+    color: #fff; background: var(--btn-red); border: none;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .bj-btn.affordable {
+    background: linear-gradient(135deg, var(--purple), #7f3f9b);
+    box-shadow: 0 2px 12px rgba(155,89,182,0.3);
+  }
+  .bj-btn.affordable.green {
+    background: linear-gradient(135deg, var(--btn-green), #16a34a);
+    box-shadow: 0 2px 12px rgba(29,185,84,0.3);
+  }
+  .bj-btn:disabled { background: var(--btn-disabled); color: #666; }
+  .bj-btn:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+  /* СЛОТЫ */
+  .slot-reels {
+    display: flex; justify-content: center; gap: 14px;
+    padding: 24px;
+    background: radial-gradient(circle, #1a1a2e 0%, #0a0a14 100%);
+    border-radius: 14px;
+    border: 3px solid var(--gold);
+    box-shadow: inset 0 0 40px rgba(255,215,0,0.2), 0 0 30px rgba(255,215,0,0.3);
+  }
+  .reel {
+    font-size: 88px; width: 130px; height: 130px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+    border-radius: 12px; line-height: 1;
+    border: 3px solid var(--border);
+    transition: all 0.2s;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .reel.spin {
+    animation: reelSpinBig 0.5s linear infinite;
+    border-color: var(--gold);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 30px rgba(255,215,0,0.6);
+  }
+  @keyframes reelSpinBig {
+    0% { transform: rotateY(0); filter: brightness(1); }
+    50% { transform: rotateY(180deg); filter: brightness(1.6); }
+    100% { transform: rotateY(360deg); filter: brightness(1); }
+  }
+  .reel.win {
+    animation: reelWin 0.5s ease-in-out 3;
+    border-color: var(--green-light);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 40px rgba(124,252,0,0.9);
+  }
+  @keyframes reelWin {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); filter: brightness(1.3); }
+  }
+  .slots-btn {
+    padding: 20px; font-size: 17px; font-weight: 800;
+    color: #fff; background: var(--btn-red); border: none;
+    border-radius: 10px;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .slots-btn.affordable {
+    background: linear-gradient(135deg, var(--gold), #e6b800);
+    color: #000;
+    box-shadow: 0 2px 16px rgba(255,215,0,0.4);
+  }
+  .slots-btn:disabled { background: var(--btn-disabled); color: #666; }
+  .slots-btn:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .slots-legend {
+    display: flex; justify-content: center; gap: 12px;
+    font-size: 11px; color: var(--text-dim);
+    padding: 8px; flex-wrap: wrap;
+  }
+  .slots-legend span {
+    background: var(--bg-dark); padding: 5px 10px;
+    border-radius: 5px; border: 1px solid var(--border);
+  }
+  .slots-result {
+    text-align: center; font-size: 14px; color: var(--text-dim);
+    min-height: 46px; line-height: 1.4; padding: 10px;
+    background: var(--bg-dark); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    border: 1px solid var(--border);
+  }
+
+  /* ==================== КРЕДИТЫ ==================== */
+  .loan-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .loan-card:hover { border-color: var(--accent); }
+  .loan-progress {
+    height: 10px; background: var(--bg-dark); border-radius: 5px;
+    margin: 10px 0; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .loan-progress > div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--green-light));
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(124,252,0,0.5);
+  }
+  .loan-detail {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; font-size: 12px; margin: 10px 0;
+  }
+  .loan-detail > div {
+    padding: 8px; background: var(--bg-dark);
+    border-radius: 6px; border: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .loan-detail b { color: var(--gold); }
+  .loan-actions {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .loan-actions button {
+    flex: 1; min-width: 120px; padding: 11px;
+    font-size: 12px; font-weight: 700; border: none;
+    border-radius: 8px; color: #fff;
+    transition: all 0.15s;
+  }
+  .loan-actions button.pay {
+    background: linear-gradient(135deg, var(--btn-green), #16a34a);
+    box-shadow: 0 2px 8px rgba(29,185,84,0.3);
+  }
+  .loan-actions button.pay:disabled {
+    background: var(--btn-disabled); color: #666;
+    box-shadow: none;
+  }
+  .loan-actions button:not(:disabled):hover {
+    transform: translateY(-1px); filter: brightness(1.15);
+  }
+
+  /* ==================== ВВОД ==================== */
+  .num-input {
+    padding: 9px 12px; background: var(--bg-panel); color: var(--text);
+    border: 2px solid var(--border); border-radius: 6px;
+    font-size: 13px; flex: 1; min-width: 120px;
+    font-family: inherit;
+    transition: all 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .num-input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(127,90,240,0.15);
+  }
+  .num-input.error { border-color: var(--red); animation: shake 0.4s; }
+  .input-row {
+    display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .input-row button {
+    padding: 9px 14px;
+    background: linear-gradient(135deg, var(--accent), #6b46d9);
+    color: #fff; border: none; border-radius: 6px;
+    font-size: 12px; font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .input-row button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127,90,240,0.4);
+  }
+
+  /* ==================== МАШИНЫ — SVG-ИКОНКИ ==================== */
+  .car-icon-wrap {
+    width: 90px; height: 60px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+    transition: transform 0.3s ease, filter 0.3s;
+  }
+  .card:hover .car-icon-wrap {
+    transform: scale(1.08) translateY(-2px);
+    filter: drop-shadow(0 6px 16px rgba(127,90,240,0.4));
+  }
+  .car-svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  /* Улучшенная карточка машины */
+  .car-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 18px;
+    flex-wrap: wrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .car-card::before {
+    content: ""; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    opacity: 0.8;
+  }
+  .car-card.common::before { background: linear-gradient(90deg, transparent, var(--rar-common), transparent); }
+  .car-card.rare::before { background: linear-gradient(90deg, transparent, var(--rar-rare), transparent); }
+  .car-card.epic::before { background: linear-gradient(90deg, transparent, var(--rar-epic), transparent); }
+  .car-card.legendary::before { background: linear-gradient(90deg, transparent, var(--rar-legendary), transparent); }
+  .car-card.mythic::before { background: linear-gradient(90deg, transparent, var(--rar-mythic), transparent); }
+  .car-card.common { border-color: rgba(138,138,154,0.4); }
+  .car-card.rare { border-color: rgba(52,152,219,0.5); }
+  .car-card.epic { border-color: rgba(155,89,182,0.5); }
+  .car-card.legendary {
+    border-color: rgba(255,215,0,0.5);
+    box-shadow: 0 0 20px rgba(255,215,0,0.1);
+  }
+  .car-card.mythic {
+    border-color: rgba(229,49,112,0.5);
+    box-shadow: 0 0 20px rgba(229,49,112,0.15);
+    animation: mythicGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes mythicGlow {
+    from { box-shadow: 0 0 20px rgba(229,49,112,0.15); }
+    to { box-shadow: 0 0 35px rgba(229,49,112,0.35); }
+  }
+  .car-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .car-card.legendary:hover { box-shadow: 0 12px 32px rgba(255,215,0,0.25); }
+  .car-card.mythic:hover { box-shadow: 0 12px 32px rgba(229,49,112,0.3); }
+
+  .rarity-header {
+    font-size: 14px; font-weight: 800;
+    padding: 10px 0 6px; letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 10px;
+  }
+  .rarity-header::before {
+    content: ""; flex: 0 0 4px; height: 18px; border-radius: 2px;
+  }
+  .rarity-header.common { color: var(--rar-common); }
+  .rarity-header.common::before { background: var(--rar-common); box-shadow: 0 0 10px var(--rar-common); }
+  .rarity-header.rare { color: var(--rar-rare); }
+  .rarity-header.rare::before { background: var(--rar-rare); box-shadow: 0 0 10px var(--rar-rare); }
+  .rarity-header.epic { color: var(--rar-epic); }
+  .rarity-header.epic::before { background: var(--rar-epic); box-shadow: 0 0 10px var(--rar-epic); }
+  .rarity-header.legendary { color: var(--rar-legendary); }
+  .rarity-header.legendary::before { background: var(--rar-legendary); box-shadow: 0 0 15px var(--rar-legendary); }
+  .rarity-header.mythic { color: var(--rar-mythic); }
+  .rarity-header.mythic::before { background: var(--rar-mythic); box-shadow: 0 0 15px var(--rar-mythic); }
+
+  /* ==================== ДОСТИЖЕНИЯ ==================== */
+  .leaders-panel {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30,30,53,0.95) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    max-width: 900px; margin: 0 auto;
+  }
+  .leaders-title {
+    font-size: 26px; font-weight: 800; color: var(--gold);
+    text-align: center; margin-bottom: 8px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 30px rgba(255,215,0,0.3);
+  }
+  .leaders-sub {
+    text-align: center; color: var(--text-dim);
+    font-size: 13px; margin-bottom: 20px;
+  }
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px; margin-top: 16px;
+  }
+  .achv {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, rgba(10,10,20,0.8) 100%);
+    border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .achv.locked { opacity: 0.35; filter: grayscale(1); }
+  .achv.unlocked {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,215,0,0.2);
+  }
+  .achv.unlocked:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 24px rgba(255,215,0,0.3);
+  }
+  .achv-icon { font-size: 32px; margin-bottom: 8px; line-height: 1; }
+  .achv-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .achv-desc { font-size: 10px; color: var(--text-dim); line-height: 1.3; }
+
+  /* ==================== УВЕДОМЛЕНИЯ ==================== */
+  #notifications {
+    position: fixed; top: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 200; pointer-events: none;
+    max-width: 380px;
+  }
+  .notif {
+    background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(21,21,42,0.95) 100%);
+    backdrop-filter: blur(10px);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 14px 18px;
+    font-size: 13px; font-weight: 600;
+    animation: notifIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    pointer-events: auto;
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .notif.success { border-left-color: var(--green); }
+  .notif.error   { border-left-color: var(--red); }
+  .notif.warning { border-left-color: var(--gold); }
+  @keyframes notifIn {
+    from { opacity: 0; transform: translateX(400px) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  /* ==================== МОДАЛЬНОЕ ОКНО ==================== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300; padding: 20px;
+    animation: fadeIn 0.2s;
+  }
+  .modal {
+    background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-dark) 100%);
+    border: 2px solid var(--accent);
+    border-radius: 14px; padding: 24px;
+    max-width: 500px; width: 100%;
+    max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal h3 {
+    font-size: 20px; margin-bottom: 14px; color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .modal p {
+    margin-bottom: 10px; line-height: 1.6;
+    color: var(--text-dim); font-size: 13px;
+    white-space: pre-line;
+  }
+  .modal b { color: var(--text); }
+  .modal-buttons {
+    display: flex; gap: 8px; margin-top: 18px;
+    justify-content: flex-end;
+  }
+  .modal-btn {
+    padding: 11px 22px; font-size: 13px; font-weight: 700;
+    border: none; border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .modal-btn.ok {
+    background: linear-gradient(135deg, var(--accent2), #23a36c);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(44,182,125,0.4);
+  }
+  .modal-btn.ok:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(44,182,125,0.5);
+  }
+  .modal-btn.cancel {
+    background: var(--bg-card); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .modal-btn.cancel:hover { background: var(--bg-card-hover); }
+
+  .waiting-result {
+    text-align: center;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 6px;
+    animation: waitingPulse 1s ease-in-out infinite alternate;
+  }
+  @keyframes waitingPulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-dark); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border); border-radius: 5px;
+    transition: background 0.2s;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media (max-width: 768px) {
+    .menu-title, .menu-title-2 { font-size: 44px; letter-spacing: 4px; }
+    .top-bar { flex-direction: column; align-items: stretch; padding: 10px; }
+    .top-section, .top-section.center, .top-section.right { align-items: flex-start; min-width: auto; }
+    .car-card, .card { flex-direction: column; align-items: stretch; }
+    .card-actions { min-width: 0; }
+    .car-icon-wrap { width: 100%; height: 80px; }
+    .balance { font-size: 22px; }
+    .casino-games { grid-template-columns: 1fr; }
+    .content { padding: 8px; }
+    .playing-card { width: 58px; height: 84px; }
+    .playing-card .card-rank { font-size: 18px; top: 5px; left: 6px; }
+    .playing-card .card-suit-big { font-size: 34px; }
+    .playing-card .card-suit-small { font-size: 13px; bottom: 5px; right: 6px; }
+    .reel { font-size: 60px; width: 90px; height: 90px; }
+    .roulette-result { font-size: 72px; min-height: 140px; }
+    .loan-detail { grid-template-columns: 1fr 1fr; }
+    .tab { padding: 8px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <div class="menu-content">
+    <div class="menu-title">BUSINESS</div>
+    <div class="menu-title-2">EMPIRE</div>
+    <div class="menu-sub">💼 Построй свою империю с нуля</div>
+    <button class="menu-btn green" id="btn-new" type="button">🎮 НОВАЯ ИГРА</button>
+    <button class="menu-btn" id="btn-continue" type="button" disabled>▶️ ПРОДОЛЖИТЬ</button>
+    <button class="menu-btn blue" id="btn-help" type="button">📖 КАК ИГРАТЬ</button>
+    <button class="menu-btn red" id="btn-exit" type="button">🚪 ВЫХОД</button>
+    <div class="save-info" id="save-info">Загрузка...</div>
+  </div>
+</div>
+
+<div id="game">
+  <div class="top-bar">
+    <div class="top-section">
+      <span class="label-small">Баланс</span>
+      <span class="balance" id="money">0 ₽</span>
+    </div>
+    <div class="top-section center">
+      <div class="stat-line"><span>📈</span><span id="income">0 ₽/сек</span></div>
+      <div class="stat-line"><span>📉</span><span id="upkeep">−0 ₽/сек</span></div>
+      <div class="stat-line"><span>💵</span><span id="net-income">0 ₽/сек</span></div>
+    </div>
+    <div class="top-section right">
+      <div class="stat-line"><span>🏆 Всего:</span><span id="total-earned">0 ₽</span></div>
+      <div class="stat-line"><span>💳 Долг:</span><span id="total-debt">0 ₽</span></div>
+      <div class="stat-line"><span>⭐ Капитал:</span><span id="networth">0 ₽</span></div>
+    </div>
+  </div>
+
+  <div class="event-bar" id="event-bar"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="businesses" type="button">🏢 Бизнесы</button>
+    <button class="tab" data-tab="market" type="button">📈 Биржа</button>
+    <button class="tab" data-tab="property" type="button">🏠 Недвижимость</button>
+    <button class="tab" data-tab="cars" type="button">🚗 Гараж</button>
+    <button class="tab" data-tab="bank" type="button">🏦 Банки</button>
+    <button class="tab" data-tab="casino" type="button">🎰 Казино</button>
+    <button class="tab" data-tab="upgrades" type="button">🛒 Улучшения</button>
+    <button class="tab leaders" data-tab="leaders" type="button">🏆 Достижения</button>
+    <button class="tab menu-btn tab-right" id="btn-back-menu" type="button">🚪 В меню</button>
+    <button class="tab save" id="btn-save-top" type="button">💾 Сохранить</button>
+    <button class="tab danger" id="btn-reset-top" type="button">🔄 Сброс</button>
+  </div>
+
+  <div class="content">
+    <div class="tab-content active" id="tab-businesses"></div>
+    <div class="tab-content" id="tab-market"></div>
+    <div class="tab-content" id="tab-property"></div>
+    <div class="tab-content" id="tab-cars"></div>
+    <div class="tab-content" id="tab-bank"></div>
+    <div class="tab-content" id="tab-casino"></div>
+    <div class="tab-content" id="tab-upgrades"></div>
+    <div class="tab-content" id="tab-leaders"></div>
+  </div>
+</div>
+
+<div id="notifications"></div>
+
+<script>
+// ============================================================
+// КОНСТАНТЫ
+// ============================================================
+var SAVE_KEY = "be_html_v3";
+var START_MONEY = 100000;
+
+// ============================================================
+// ФОРМАТИРОВАНИЕ
+// ============================================================
+function fmtMoney(v) {
+  if (v === undefined || v === null || isNaN(v)) return "0";
+  var neg = v < 0; v = Math.abs(v);
+  var s;
+  if (v >= 1e15) s = (v/1e15).toFixed(2) + "Q";
+  else if (v >= 1e12) s = (v/1e12).toFixed(2) + "T";
+  else if (v >= 1e9) s = (v/1e9).toFixed(2) + "B";
+  else if (v >= 1e6) s = (v/1e6).toFixed(2) + "M";
+  else if (v >= 1e3) s = Math.floor(v).toLocaleString("ru-RU").replace(/,/g, " ");
+  else s = Math.floor(v).toString();
+  return (neg ? "-" : "") + s;
+}
+function fmtPrice(p) {
+  if (p >= 1000) return p.toFixed(0);
+  if (p >= 1) return p.toFixed(2);
+  if (p >= 0.01) return p.toFixed(4);
+  return p.toFixed(8);
+}
+function fmtQty(q) {
+  if (q >= 1e6) return (q/1e6).toFixed(2) + "M";
+  if (q >= 1e3) return (q/1e3).toFixed(2) + "K";
+  if (q >= 1) return q.toFixed(2);
+  return q.toFixed(6);
+}
+function escHtml(text) {
+  return String(text || "").replace(/[&<>"']/g, function(c) {
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c];
+  });
+}
+function parseNum(raw) {
+  if (typeof raw === "number") return isNaN(raw) ? 0 : raw;
+  if (raw === undefined || raw === null) return 0;
+  var s = String(raw);
+  s = s.replace(/[\s\u00A0\u2009\u202F]/g, "");
+  if (s === "") return 0;
+  var last = s[s.length - 1].toUpperCase();
+  var mult = 1;
+  if (last === "K") { mult = 1e3; s = s.slice(0, -1); }
+  else if (last === "M") { mult = 1e6; s = s.slice(0, -1); }
+  else if (last === "B") { mult = 1e9; s = s.slice(0, -1); }
+  else if (last === "T") { mult = 1e12; s = s.slice(0, -1); }
+  else if (last === "Q") { mult = 1e15; s = s.slice(0, -1); }
+  var hasDot = s.indexOf(".") !== -1;
+  var hasComma = s.indexOf(",") !== -1;
+  if (hasDot && hasComma) {
+    if (s.lastIndexOf(".") > s.lastIndexOf(",")) s = s.replace(/,/g, "");
+    else { s = s.replace(/\./g, ""); s = s.replace(/,/g, "."); }
+  } else if (hasComma) {
+    var parts = s.split(",");
+    if (parts.length === 2) {
+      if (parts[1].length === 3 && parts[0].length <= 3) s = parts[0] + parts[1];
+      else s = parts[0] + "." + parts[1];
+    } else s = s.replace(/,/g, "");
+  } else if (hasDot) {
+    var p2 = s.split(".");
+    if (p2.length > 2) {
+      var lastP = p2.pop();
+      s = p2.join("") + "." + lastP;
+    }
+  }
+  s = s.replace(/[^0-9.\-]/g, "");
+  var v = parseFloat(s);
+  return isNaN(v) ? 0 : v * mult;
+}
+
+// ============================================================
+// SVG-ИКОНКИ МАШИН
+// ============================================================
+function carSvg(carId) {
+  // Каждая машина — уникальный SVG с кузовом, цветом, деталями
+  var svgs = {
+    // ===== ОБЫЧНЫЕ =====
+    voshod: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_voshod" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#7ec4f3"/><stop offset="100%" stop-color="#3a7ac4"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="52" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M12 45 L18 32 Q20 28 26 28 L90 28 Q96 28 98 32 L104 45 L104 52 Q104 55 100 55 L16 55 Q12 55 12 52 Z" fill="url(#g_voshod)" stroke="#1e3a5f" stroke-width="1.5"/>' +
+      '<path d="M28 30 L38 22 L78 22 L86 30 Z" fill="#a8d8f0" stroke="#1e3a5f" stroke-width="1"/>' +
+      '<rect x="55" y="22" width="2" height="8" fill="#1e3a5f"/>' +
+      '<circle cx="28" cy="55" r="9" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="28" cy="55" r="3" fill="#666"/>' +
+      '<circle cx="90" cy="55" r="9" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="90" cy="55" r="3" fill="#666"/>' +
+      '<rect x="8" y="42" width="4" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="104" y="42" width="4" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    orbita: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_orbita" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#f5f5f5"/><stop offset="100%" stop-color="#a0a0a0"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="50" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M10 44 L16 30 Q18 26 24 26 L96 26 Q102 26 104 30 L110 44 L110 52 Q110 55 106 55 L14 55 Q10 55 10 52 Z" fill="url(#g_orbita)" stroke="#333" stroke-width="1.5"/>' +
+      '<path d="M26 28 L36 20 L82 20 L92 28 Z" fill="#d0e8f5" stroke="#333" stroke-width="1"/>' +
+      '<rect x="58" y="20" width="2" height="8" fill="#333"/>' +
+      '<circle cx="26" cy="55" r="9" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="26" cy="55" r="3" fill="#666"/>' +
+      '<circle cx="92" cy="55" r="9" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="92" cy="55" r="3" fill="#666"/>' +
+      '<rect x="6" y="41" width="4" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="110" y="41" width="4" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    zarya: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_zarya" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#5a9e5a"/><stop offset="100%" stop-color="#2a5a2a"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="54" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M8 42 L14 26 Q16 22 22 22 L98 22 Q104 22 106 26 L112 42 L112 52 Q112 55 108 55 L12 55 Q8 55 8 52 Z" fill="url(#g_zarya)" stroke="#1a4a1a" stroke-width="1.5"/>' +
+      '<path d="M22 24 L34 16 L84 16 L96 24 Z" fill="#b8e0c8" stroke="#1a4a1a" stroke-width="1"/>' +
+      '<rect x="57" y="16" width="2" height="8" fill="#1a4a1a"/>' +
+      '<circle cx="24" cy="56" r="10" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="24" cy="56" r="4" fill="#666"/>' +
+      '<circle cx="96" cy="56" r="10" fill="#1a1a1a" stroke="#444" stroke-width="2"/><circle cx="96" cy="56" r="4" fill="#666"/>' +
+      '<rect x="4" y="40" width="4" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="112" y="40" width="4" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    iskra: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_iskra" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#ff6b3d"/><stop offset="100%" stop-color="#a03020"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="54" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M6 46 L14 28 Q16 24 22 24 L98 24 Q104 24 106 28 L114 46 L114 52 Q114 55 110 55 L10 55 Q6 55 6 52 Z" fill="url(#g_iskra)" stroke="#5a1a10" stroke-width="1.5"/>' +
+      '<path d="M20 26 L32 14 L88 14 L100 26 Z" fill="#ffd8c0" stroke="#5a1a10" stroke-width="1"/>' +
+      '<rect x="57" y="14" width="2" height="10" fill="#5a1a10"/>' +
+      '<circle cx="22" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="22" cy="56" r="4" fill="#888"/>' +
+      '<circle cx="98" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="98" cy="56" r="4" fill="#888"/>' +
+      '<rect x="2" y="42" width="5" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="113" y="42" width="5" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    // ===== РЕДКИЕ =====
+    granit: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_granit" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#5a6a7a"/><stop offset="100%" stop-color="#2a3545"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="54" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M6 44 L14 26 Q16 22 22 22 L98 22 Q104 22 106 26 L114 44 L114 52 Q114 55 110 55 L10 55 Q6 55 6 52 Z" fill="url(#g_granit)" stroke="#1a2535" stroke-width="1.5"/>' +
+      '<path d="M18 24 L32 12 L88 12 L102 24 Z" fill="#a8c0d8" stroke="#1a2535" stroke-width="1"/>' +
+      '<rect x="57" y="12" width="2" height="12" fill="#1a2535"/>' +
+      '<circle cx="22" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="22" cy="56" r="4" fill="#888"/>' +
+      '<circle cx="98" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="98" cy="56" r="4" fill="#888"/>' +
+      '<rect x="2" y="42" width="5" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="113" y="42" width="5" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    volna: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_volna" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#3d5a80"/><stop offset="100%" stop-color="#152a44"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="55" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M4 46 L12 26 Q14 22 20 22 L100 22 Q106 22 108 26 L116 46 L116 52 Q116 55 112 55 L8 55 Q4 55 4 52 Z" fill="url(#g_volna)" stroke="#0a1a2a" stroke-width="1.5"/>' +
+      '<path d="M16 24 L30 10 L90 10 L104 24 Z" fill="#98c0e0" stroke="#0a1a2a" stroke-width="1"/>' +
+      '<rect x="58" y="10" width="2" height="14" fill="#0a1a2a"/>' +
+      '<circle cx="20" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="20" cy="56" r="4" fill="#888"/>' +
+      '<circle cx="100" cy="56" r="11" fill="#0a0a0a" stroke="#555" stroke-width="2"/><circle cx="100" cy="56" r="4" fill="#888"/>' +
+      '<rect x="0" y="42" width="5" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="115" y="42" width="5" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    vega: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_vega" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#1a1a1a"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="55" ry="4" fill="rgba(0,0,0,0.4)"/>' +
+      '<path d="M4 46 L12 26 Q14 22 20 22 L100 22 Q106 22 108 26 L116 46 L116 52 Q116 55 112 55 L8 55 Q4 55 4 52 Z" fill="url(#g_vega)" stroke="#333" stroke-width="1.5"/>' +
+      '<path d="M14 24 L28 10 L92 10 L106 24 Z" fill="#333" stroke="#555" stroke-width="1"/>' +
+      '<path d="M58 10 L58 24" stroke="#888" stroke-width="1.5"/>' +
+      '<circle cx="20" cy="56" r="12" fill="#0a0a0a" stroke="#666" stroke-width="2.5"/><circle cx="20" cy="56" r="4" fill="#aaa"/>' +
+      '<circle cx="100" cy="56" r="12" fill="#0a0a0a" stroke="#666" stroke-width="2.5"/><circle cx="100" cy="56" r="4" fill="#aaa"/>' +
+      '<rect x="0" y="42" width="5" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="115" y="42" width="5" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    aurum: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_aurum" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#d4af37"/><stop offset="100%" stop-color="#8a6a1f"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="62" rx="56" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M2 46 L10 24 Q12 20 18 20 L102 20 Q108 20 110 24 L118 46 L118 52 Q118 55 114 55 L6 55 Q2 55 2 52 Z" fill="url(#g_aurum)" stroke="#5a4515" stroke-width="1.5"/>' +
+      '<path d="M12 22 L28 8 L92 8 L108 22 Z" fill="#f5e5a5" stroke="#5a4515" stroke-width="1"/>' +
+      '<rect x="57" y="8" width="2" height="14" fill="#5a4515"/>' +
+      '<circle cx="18" cy="56" r="12" fill="#0a0a0a" stroke="#888" stroke-width="2.5"/><circle cx="18" cy="56" r="4" fill="#ddd"/>' +
+      '<circle cx="102" cy="56" r="12" fill="#0a0a0a" stroke="#888" stroke-width="2.5"/><circle cx="102" cy="56" r="4" fill="#ddd"/>' +
+      '<rect x="-2" y="42" width="5" height="6" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="117" y="42" width="5" height="6" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    // ===== ЭПИЧЕСКИЕ =====
+    feniks: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_feniks" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#e53935"/><stop offset="100%" stop-color="#6a1010"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M0 48 L10 24 Q12 20 18 20 L102 20 Q108 20 110 24 L120 48 L120 52 Q120 55 116 55 L4 55 Q0 55 0 52 Z" fill="url(#g_feniks)" stroke="#3a0808" stroke-width="1.5"/>' +
+      '<path d="M10 22 L30 6 L90 6 L110 22 Z" fill="#2a0808" stroke="#5a1010" stroke-width="1"/>' +
+      '<path d="M40 8 L60 4 L80 8" stroke="#ff6060" stroke-width="1.5" fill="none"/>' +
+      '<circle cx="16" cy="57" r="13" fill="#0a0a0a" stroke="#e53935" stroke-width="3"/><circle cx="16" cy="57" r="5" fill="#ff6b6b"/>' +
+      '<circle cx="104" cy="57" r="13" fill="#0a0a0a" stroke="#e53935" stroke-width="3"/><circle cx="104" cy="57" r="5" fill="#ff6b6b"/>' +
+      '<rect x="-4" y="42" width="6" height="7" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="118" y="42" width="6" height="7" rx="1" fill="#e53170"/>' +
+      '<path d="M0 46 L20 46" stroke="#ffcc00" stroke-width="1"/>' +
+    '</svg>',
+
+    titan: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_titan" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#2a2a2a"/><stop offset="100%" stop-color="#0a0a0a"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M0 40 L10 20 Q12 16 18 16 L102 16 Q108 16 110 20 L120 40 L120 52 Q120 55 116 55 L4 55 Q0 55 0 52 Z" fill="url(#g_titan)" stroke="#333" stroke-width="2"/>' +
+      '<path d="M14 18 L30 4 L90 4 L106 18 Z" fill="#1a1a1a" stroke="#444" stroke-width="1"/>' +
+      '<path d="M20 50 L100 50" stroke="#555" stroke-width="2"/>' +
+      '<circle cx="16" cy="57" r="14" fill="#0a0a0a" stroke="#666" stroke-width="3"/><circle cx="16" cy="57" r="6" fill="#333"/>' +
+      '<circle cx="104" cy="57" r="14" fill="#0a0a0a" stroke="#666" stroke-width="3"/><circle cx="104" cy="57" r="6" fill="#333"/>' +
+      '<rect x="-4" y="38" width="6" height="8" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="118" y="38" width="6" height="8" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    skorpion: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_skorpion" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M0 50 L10 24 Q12 20 18 20 L102 20 Q108 20 110 24 L120 50 L120 54 Q120 57 116 57 L4 57 Q0 57 0 54 Z" fill="url(#g_skorpion)" stroke="#6a4a00" stroke-width="1.5"/>' +
+      '<path d="M10 22 L30 6 L90 6 L110 22 Z" fill="#3a2a00" stroke="#6a4a00" stroke-width="1"/>' +
+      '<path d="M14 22 L106 22" stroke="#6a4a00" stroke-width="1"/>' +
+      '<circle cx="14" cy="59" r="14" fill="#0a0a0a" stroke="#ffd700" stroke-width="3"/><circle cx="14" cy="59" r="5" fill="#ffed4e"/>' +
+      '<circle cx="106" cy="59" r="14" fill="#0a0a0a" stroke="#ffd700" stroke-width="3"/><circle cx="106" cy="59" r="5" fill="#ffed4e"/>' +
+      '<rect x="-4" y="44" width="6" height="7" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="118" y="44" width="6" height="7" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    vihr: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_vihr" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#005a8a"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M0 50 L8 22 Q10 18 16 18 L104 18 Q110 18 112 22 L120 50 L120 54 Q120 57 116 57 L4 57 Q0 57 0 54 Z" fill="url(#g_vihr)" stroke="#003a5a" stroke-width="1.5"/>' +
+      '<path d="M8 20 L28 2 L92 2 L112 20 Z" fill="#a0e8ff" stroke="#003a5a" stroke-width="1"/>' +
+      '<path d="M50 4 L60 2 L70 4" stroke="#00d4ff" stroke-width="2" fill="none"/>' +
+      '<circle cx="14" cy="59" r="13" fill="#0a0a0a" stroke="#00d4ff" stroke-width="3"/><circle cx="14" cy="59" r="4" fill="#80e8ff"/>' +
+      '<circle cx="106" cy="59" r="13" fill="#0a0a0a" stroke="#00d4ff" stroke-width="3"/><circle cx="106" cy="59" r="4" fill="#80e8ff"/>' +
+      '<rect x="-4" y="44" width="6" height="7" rx="1" fill="#ffeb3b"/>' +
+      '<rect x="118" y="44" width="6" height="7" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    // ===== ЛЕГЕНДАРНЫЕ =====
+    imperial: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_imperial" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#c0a060"/><stop offset="100%" stop-color="#5a3a10"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="5" fill="rgba(0,0,0,0.6)"/>' +
+      '<path d="M0 52 L8 22 Q10 18 16 18 L104 18 Q110 18 112 22 L120 52 L120 55 Q120 58 116 58 L4 58 Q0 58 0 55 Z" fill="url(#g_imperial)" stroke="#3a2010" stroke-width="2"/>' +
+      '<path d="M6 20 L26 2 L94 2 L114 20 Z" fill="#e8d0a0" stroke="#3a2010" stroke-width="1.5"/>' +
+      '<path d="M40 2 L60 0 L80 2" stroke="#fff0c0" stroke-width="1.5" fill="none"/>' +
+      '<circle cx="60" cy="12" r="4" fill="#fff0c0" opacity="0.8"/>' +
+      '<circle cx="12" cy="60" r="15" fill="#0a0a0a" stroke="#c0a060" stroke-width="3.5"/><circle cx="12" cy="60" r="6" fill="#f5e0b0"/>' +
+      '<circle cx="108" cy="60" r="15" fill="#0a0a0a" stroke="#c0a060" stroke-width="3.5"/><circle cx="108" cy="60" r="6" fill="#f5e0b0"/>' +
+      '<rect x="-6" y="46" width="6" height="8" rx="1" fill="#ffe080"/>' +
+      '<rect x="120" y="46" width="6" height="8" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    kosmos: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_kosmos" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#8b00ff"/><stop offset="100%" stop-color="#2a005a"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="5" fill="rgba(0,0,0,0.6)"/>' +
+      '<path d="M0 52 L6 20 Q8 14 16 14 L104 14 Q112 14 114 20 L120 52 L120 55 Q120 58 116 58 L4 58 Q0 58 0 55 Z" fill="url(#g_kosmos)" stroke="#1a005a" stroke-width="2"/>' +
+      '<path d="M4 16 L26 -2 L94 -2 L116 16 Z" fill="#c080ff" stroke="#1a005a" stroke-width="1.5"/>' +
+      '<path d="M30 2 L60 -2 L90 2" stroke="#e0b0ff" stroke-width="2" fill="none"/>' +
+      '<circle cx="60" cy="8" r="3" fill="#fff" opacity="0.9"/>' +
+      '<circle cx="10" cy="60" r="16" fill="#0a0a0a" stroke="#8b00ff" stroke-width="4"/><circle cx="10" cy="60" r="6" fill="#d0a0ff"/>' +
+      '<circle cx="110" cy="60" r="16" fill="#0a0a0a" stroke="#8b00ff" stroke-width="4"/><circle cx="110" cy="60" r="6" fill="#d0a0ff"/>' +
+      '<rect x="-8" y="46" width="6" height="8" rx="1" fill="#ffe080"/>' +
+      '<rect x="122" y="46" width="6" height="8" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    prestige: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_prestige" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#f5f5f5"/><stop offset="100%" stop-color="#505050"/>' +
+      '</linearGradient></defs>' +
+      '<ellipse cx="60" cy="64" rx="58" ry="4" fill="rgba(0,0,0,0.5)"/>' +
+      '<path d="M0 44 L8 22 Q10 18 16 18 L104 18 Q110 18 112 22 L120 44 L120 54 Q120 57 116 57 L4 57 Q0 57 0 54 Z" fill="url(#g_prestige)" stroke="#333" stroke-width="2"/>' +
+      '<path d="M6 20 L26 2 L94 2 L114 20 Z" fill="#e8e8e8" stroke="#333" stroke-width="1.5"/>' +
+      '<path d="M30 18 L60 4 L90 18" stroke="#888" stroke-width="1" fill="none"/>' +
+      '<circle cx="10" cy="59" r="15" fill="#0a0a0a" stroke="#f5f5f5" stroke-width="3.5"/><circle cx="10" cy="59" r="6" fill="#f0f0f0"/>' +
+      '<circle cx="110" cy="59" r="15" fill="#0a0a0a" stroke="#f5f5f5" stroke-width="3.5"/><circle cx="110" cy="59" r="6" fill="#f0f0f0"/>' +
+      '<rect x="-8" y="40" width="8" height="9" rx="1" fill="#fff8c0"/>' +
+      '<rect x="120" y="40" width="8" height="9" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    // ===== МИФИЧЕСКИЕ =====
+    phantom: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_phantom" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#ff0080"/><stop offset="100%" stop-color="#5a0040"/>' +
+      '</linearGradient>' +
+      '<radialGradient id="glow_phantom"><stop offset="0%" stop-color="#ff80d0" stop-opacity="0.8"/>' +
+      '<stop offset="100%" stop-color="#ff80d0" stop-opacity="0"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="68" rx="56" ry="10" fill="url(#glow_phantom)" opacity="0.6"/>' +
+      '<path d="M0 52 L6 18 Q8 12 16 12 L104 12 Q112 12 114 18 L120 52 L120 55 Q120 58 116 58 L4 58 Q0 58 0 55 Z" fill="url(#g_phantom)" stroke="#3a0020" stroke-width="2"/>' +
+      '<path d="M2 14 L26 -4 L94 -4 L118 14 Z" fill="#ffb0e8" stroke="#3a0020" stroke-width="1.5"/>' +
+      '<path d="M20 8 L60 -4 L100 8" stroke="#fff0fa" stroke-width="2" fill="none" opacity="0.9"/>' +
+      '<circle cx="60" cy="6" r="4" fill="#fff" opacity="0.9"/>' +
+      '<circle cx="8" cy="60" r="17" fill="#1a0010" stroke="#ff00a0" stroke-width="4"/><circle cx="8" cy="60" r="7" fill="#ff80d0"/>' +
+      '<circle cx="112" cy="60" r="17" fill="#1a0010" stroke="#ff00a0" stroke-width="4"/><circle cx="112" cy="60" r="7" fill="#ff80d0"/>' +
+      '<rect x="-10" y="46" width="8" height="9" rx="1" fill="#fff8c0"/>' +
+      '<rect x="122" y="46" width="8" height="9" rx="1" fill="#e53170"/>' +
+    '</svg>',
+
+    infinity: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_infinity" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#8b00ff"/><stop offset="100%" stop-color="#ff0080"/>' +
+      '</linearGradient>' +
+      '<radialGradient id="glow_infinity"><stop offset="0%" stop-color="#a080ff" stop-opacity="0.8"/>' +
+      '<stop offset="100%" stop-color="#a080ff" stop-opacity="0"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="68" rx="56" ry="10" fill="url(#glow_infinity)" opacity="0.6"/>' +
+      '<path d="M0 52 L6 18 Q8 12 16 12 L104 12 Q112 12 114 18 L120 52 L120 55 Q120 58 116 58 L4 58 Q0 58 0 55 Z" fill="url(#g_infinity)" stroke="#200040" stroke-width="2"/>' +
+      '<path d="M2 14 L26 -4 L94 -4 L118 14 Z" fill="#e0d0ff" stroke="#200040" stroke-width="1.5"/>' +
+      '<path d="M30 -4 L60 -6 L90 -4" stroke="#fff" stroke-width="2" fill="none" opacity="0.9"/>' +
+      '<circle cx="60" cy="4" r="4" fill="#fff" opacity="0.9"/>' +
+      '<circle cx="8" cy="60" r="17" fill="#0a001a" stroke="#8b00ff" stroke-width="4"/><circle cx="8" cy="60" r="7" fill="#c0a0ff"/>' +
+      '<circle cx="112" cy="60" r="17" fill="#0a001a" stroke="#8b00ff" stroke-width="4"/><circle cx="112" cy="60" r="7" fill="#c0a0ff"/>' +
+      '<rect x="-10" y="46" width="8" height="9" rx="1" fill="#a0ffff"/>' +
+      '<rect x="122" y="46" width="8" height="9" rx="1" fill="#ff80a0"/>' +
+    '</svg>',
+
+    quantum: '<svg class="car-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="g_quantum" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#00ffc8"/><stop offset="50%" stop-color="#0080ff"/><stop offset="100%" stop-color="#ff00c8"/>' +
+      '</linearGradient>' +
+      '<radialGradient id="glow_quantum"><stop offset="0%" stop-color="#80ffff" stop-opacity="0.9"/>' +
+      '<stop offset="100%" stop-color="#80ffff" stop-opacity="0"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="68" rx="58" ry="12" fill="url(#glow_quantum)" opacity="0.7"/>' +
+      '<path d="M0 52 L4 14 Q6 8 16 8 L104 8 Q114 8 116 14 L120 52 L120 55 Q120 58 116 58 L4 58 Q0 58 0 55 Z" fill="url(#g_quantum)" stroke="#004080" stroke-width="2"/>' +
+      '<path d="M0 10 L26 -8 L94 -8 L120 10 Z" fill="#c0ffff" stroke="#004080" stroke-width="1.5"/>' +
+      '<path d="M20 -6 L60 -10 L100 -6" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>' +
+      '<circle cx="60" cy="-2" r="5" fill="#fff" opacity="0.9"/>' +
+      '<circle cx="60" cy="-2" r="8" fill="none" stroke="#fff" stroke-width="1" opacity="0.5"/>' +
+      '<circle cx="6" cy="60" r="18" fill="#001a2a" stroke="#00ffc8" stroke-width="4"/><circle cx="6" cy="60" r="8" fill="#80ffff"/>' +
+      '<circle cx="114" cy="60" r="18" fill="#001a2a" stroke="#ff00c8" stroke-width="4"/><circle cx="114" cy="60" r="8" fill="#ff80e8"/>' +
+      '<rect x="-12" y="46" width="8" height="9" rx="1" fill="#a0ffff"/>' +
+      '<rect x="124" y="46" width="8" height="9" rx="1" fill="#ff80a0"/>' +
+    '</svg>'
+  };
+  return svgs[carId] || svgs.voshod;
+}
+
+// ============================================================
+// ДАННЫЕ
+// ============================================================
+function makeBusinesses() {
+  return [
+    { name:"Ларёк с шаурмой",   baseCost:50000,        yearly:600000,        icon:"🌯", maxLevel:30, upkeepPct:0.35, level:0, hasManager:false },
+    { name:"Кофейня",           baseCost:500000,       yearly:1800000,       icon:"☕", maxLevel:30, upkeepPct:0.40, level:0, hasManager:false },
+    { name:"Пиццерия",          baseCost:2000000,      yearly:5000000,       icon:"🍕", maxLevel:30, upkeepPct:0.42, level:0, hasManager:false },
+    { name:"Автомойка",         baseCost:5000000,      yearly:9000000,       icon:"🚗", maxLevel:28, upkeepPct:0.45, level:0, hasManager:false },
+    { name:"Фитнес-клуб",       baseCost:25000000,     yearly:38000000,      icon:"🏋️", maxLevel:26, upkeepPct:0.48, level:0, hasManager:false },
+    { name:"Автосалон",         baseCost:120000000,    yearly:160000000,     icon:"🚙", maxLevel:24, upkeepPct:0.50, level:0, hasManager:false },
+    { name:"IT-стартап",        baseCost:700000000,    yearly:950000000,     icon:"💻", maxLevel:22, upkeepPct:0.55, level:0, hasManager:false },
+    { name:"Нефтяная компания", baseCost:20000000000,  yearly:26000000000,   icon:"🛢️", maxLevel:20, upkeepPct:0.60, level:0, hasManager:false },
+    { name:"Космическая корп.", baseCost:400000000000, yearly:500000000000,  icon:"🚀", maxLevel:18, upkeepPct:0.65, level:0, hasManager:false },
+    { name:"Мегабанк",          baseCost:4000000000000,yearly:5000000000000, icon:"🏦", maxLevel:15, upkeepPct:0.70, level:0, hasManager:false },
+  ];
+}
+function makeAssets() {
+  var defs = [
+    { ticker:"ZC",  name:"ЗеноКоин",    icon:"🟡", price:4500000, vol:0.035, kind:"crypto" },
+    { ticker:"AT",  name:"АльтТокен",   icon:"🟣", price:180000,  vol:0.045, kind:"crypto" },
+    { ticker:"NX",  name:"Нексус",      icon:"🔵", price:9500,    vol:0.06,  kind:"crypto" },
+    { ticker:"MC",  name:"МунКоин",     icon:"🌙", price:12,      vol:0.09,  kind:"crypto" },
+    { ticker:"SHB", name:"ШибаДог",     icon:"🐕", price:0.0008,  vol:0.11,  kind:"crypto" },
+    { ticker:"VLK", name:"ВолкТех",     icon:"🐺", price:280,     vol:0.015, kind:"stock" },
+    { ticker:"GRM", name:"ГромЭнерго",  icon:"⚡", price:155,     vol:0.014, kind:"stock" },
+    { ticker:"NRF", name:"НордФарм",    icon:"💊", price:7800,    vol:0.013, kind:"stock" },
+    { ticker:"ZET", name:"ЗетаХолдинг", icon:"🅉", price:5200,    vol:0.025, kind:"stock" },
+  ];
+  for (var i = 0; i < defs.length; i++) {
+    defs[i].basePrice = defs[i].price;
+    defs[i].amount = 0;
+    defs[i].avgBuy = 0;
+    defs[i].history = [];
+    for (var j = 0; j < 40; j++) defs[i].history.push(defs[i].price);
+  }
+  return defs;
+}
+function makeBanks() {
+  return [
+    { bankId:"cap",  name:"Капитал-Банк",       icon:"🏛️", rate:14.5,  maxLoan:50000000,  limit:150000000,   termDays:365, minScore:30 },
+    { bankId:"nord", name:"Северный Кредит",    icon:"❄️", rate:17.8,  maxLoan:100000000, limit:300000000,   termDays:365, minScore:35 },
+    { bankId:"tech", name:"ТехноФинанс",        icon:"⚙️", rate:21.0,  maxLoan:250000000, limit:600000000,   termDays:270, minScore:40 },
+    { bankId:"aura", name:"Аура-Инвест",        icon:"✨", rate:26.4,  maxLoan:500000000, limit:1000000000,  termDays:180, minScore:45 },
+    { bankId:"fast", name:"Быстрые Деньги",     icon:"⚡", rate:35.9,  maxLoan:800000000, limit:1500000000,  termDays:120, minScore:50 },
+    { bankId:"mx",   name:"МикроЗайм-Экспресс", icon:"💀", rate:189.0, maxLoan:200000000, limit:400000000,   termDays:90,  minScore:0 },
+  ];
+}
+function makeProperties() {
+  return [
+    { propId:"studio", name:"Студия в центре",     icon:"🏢", price:6000000,       yieldPct:5.5,  appPct:8.0,  upkeepPct:0.20, kind:"res", owned:false, currentPrice:6000000,       tenant:false, mortgage:null },
+    { propId:"flat",   name:"2к квартира",         icon:"🏙️", price:15000000,      yieldPct:5.0,  appPct:7.0,  upkeepPct:0.20, kind:"res", owned:false, currentPrice:15000000,      tenant:false, mortgage:null },
+    { propId:"house",  name:"Загородный дом",      icon:"🏡", price:40000000,      yieldPct:4.0,  appPct:6.5,  upkeepPct:0.25, kind:"res", owned:false, currentPrice:40000000,      tenant:false, mortgage:null },
+    { propId:"office", name:"Офис в бизнес-центре",icon:"🏬", price:100000000,     yieldPct:8.0,  appPct:6.0,  upkeepPct:0.30, kind:"com", owned:false, currentPrice:100000000,     tenant:false, mortgage:null },
+    { propId:"mall",   name:"Торговый центр",      icon:"🏪", price:800000000,     yieldPct:10.0, appPct:7.0,  upkeepPct:0.35, kind:"com", owned:false, currentPrice:800000000,     tenant:false, mortgage:null },
+    { propId:"sky",    name:"Пентхаус",            icon:"🌆", price:3000000000,    yieldPct:4.0,  appPct:9.0,  upkeepPct:0.20, kind:"res", owned:false, currentPrice:3000000000,    tenant:false, mortgage:null },
+    { propId:"park",   name:"Бизнес-парк",         icon:"🏭", price:15000000000,   yieldPct:11.0, appPct:7.5,  upkeepPct:0.40, kind:"com", owned:false, currentPrice:15000000000,   tenant:false, mortgage:null },
+    { propId:"island", name:"Частный остров",      icon:"🏝️", price:200000000000,  yieldPct:3.0,  appPct:10.0, upkeepPct:0.15, kind:"res", owned:false, currentPrice:200000000000,  tenant:false, mortgage:null },
+  ];
+}
+function makeUpgrades() {
+  return [
+    { id:"income_mult", name:"Маркетинговая кампания", desc:"+10% к доходу",       baseCost:500000,    growth:1.9, level:0, max:40, icon:"📣" },
+    { id:"offshore",    name:"Офшорный счёт",          desc:"-20% расходов",       baseCost:5000000,   growth:2.2, level:0, max:5,  icon:"🏝️" },
+    { id:"credit_score",name:"Кредитная история",      desc:"+5 к рейтингу",       baseCost:2000000,   growth:2.0, level:0, max:10, icon:"💳" },
+    { id:"casino_luck", name:"Удача в казино",         desc:"+1% к шансам",        baseCost:1000000,   growth:2.5, level:0, max:10, icon:"🍀" },
+    { id:"insider",     name:"Инсайдерская информация",desc:"Аналитика",           baseCost:10000000,  growth:1.0, level:0, max:1,  icon:"🕵️" },
+    { id:"fast_trade",  name:"Быстрая торговля",       desc:"Кнопки ×10/×100",     baseCost:50000000,  growth:1.0, level:0, max:1,  icon:"⚡" },
+    { id:"auto_trader", name:"Автотрейдер",            desc:"Авто-торговля",       baseCost:500000000, growth:1.0, level:0, max:1,  icon:"🤖" },
+    { id:"real_estate", name:"Агентство недвижимости", desc:"+10% к аренде",       baseCost:100000000, growth:2.5, level:0, max:10, icon:"🏠" },
+  ];
+}
+function makeCars() {
+  return [
+    { carId:"voshod",    name:"Восход Компакт",   icon:"🚗", price:500000,      growthPct:3.0,  rarity:"common",    desc:"Городской седан начального класса",   owned:false, currentPrice:500000,      purchasedAt:null, tuned:false },
+    { carId:"orbita",    name:"Орбита 120",       icon:"🚗", price:800000,      growthPct:3.5,  rarity:"common",    desc:"Надёжный народный автомобиль",       owned:false, currentPrice:800000,      purchasedAt:null, tuned:false },
+    { carId:"zarya",     name:"Заря Кросс",       icon:"🚗", price:1500000,     growthPct:4.0,  rarity:"common",    desc:"Практичный кроссовер",               owned:false, currentPrice:1500000,     purchasedAt:null, tuned:false },
+    { carId:"iskra",     name:"Искра GT",         icon:"🚗", price:2000000,     growthPct:4.2,  rarity:"common",    desc:"Спортивный хэтчбек",                 owned:false, currentPrice:2000000,     purchasedAt:null, tuned:false },
+    { carId:"granit",    name:"Гранит Бизнес",    icon:"🚙", price:4500000,     growthPct:5.5,  rarity:"rare",      desc:"Бизнес-седан премиум-класса",        owned:false, currentPrice:4500000,     purchasedAt:null, tuned:false },
+    { carId:"volna",     name:"Волна 5 Люкс",     icon:"🚙", price:7000000,     growthPct:6.0,  rarity:"rare",      desc:"Спорт и комфорт в одном",            owned:false, currentPrice:7000000,     purchasedAt:null, tuned:false },
+    { carId:"vega",      name:"Вега Executive",   icon:"🚙", price:8500000,     growthPct:6.2,  rarity:"rare",      desc:"Немецкое качество сборки",           owned:false, currentPrice:8500000,     purchasedAt:null, tuned:false },
+    { carId:"aurum",     name:"Аурум S-Class",    icon:"🚙", price:12000000,    growthPct:6.5,  rarity:"rare",      desc:"Представительский флагман",          owned:false, currentPrice:12000000,    purchasedAt:null, tuned:false },
+    { carId:"feniks",    name:"Феникс 911",       icon:"🏎️", price:25000000,    growthPct:8.0,  rarity:"epic",      desc:"Легендарная классика",               owned:false, currentPrice:25000000,    purchasedAt:null, tuned:false },
+    { carId:"titan",     name:"Титан SUV",        icon:"🏎️", price:45000000,    growthPct:8.5,  rarity:"epic",      desc:"Мощный и роскошный внедорожник",     owned:false, currentPrice:45000000,    purchasedAt:null, tuned:false },
+    { carId:"skorpion",  name:"Скорпион Рома",    icon:"🏎️", price:65000000,    growthPct:9.0,  rarity:"epic",      desc:"Итальянская страсть",                owned:false, currentPrice:65000000,    purchasedAt:null, tuned:false },
+    { carId:"vihr",      name:"Вихрь 720",        icon:"🏎️", price:90000000,    growthPct:9.5,  rarity:"epic",      desc:"Формула для обычных дорог",          owned:false, currentPrice:90000000,    purchasedAt:null, tuned:false },
+    { carId:"imperial",  name:"Империал Гранд",   icon:"🏎️", price:250000000,   growthPct:12.0, rarity:"legendary", desc:"Скорость выше 300 км/ч",             owned:false, currentPrice:250000000,   purchasedAt:null, tuned:false },
+    { carId:"kosmos",    name:"Космос GT-R",      icon:"🏎️", price:450000000,   growthPct:13.0, rarity:"legendary", desc:"Рекордсмен скорости",                owned:false, currentPrice:450000000,   purchasedAt:null, tuned:false },
+    { carId:"prestige",  name:"Престиж Фантом",   icon:"🚙", price:800000000,   growthPct:14.0, rarity:"legendary", desc:"Люкс на колёсах",                    owned:false, currentPrice:800000000,   purchasedAt:null, tuned:false },
+    { carId:"phantom",   name:"Фантом Зонда",     icon:"🌟", price:2000000000,  growthPct:18.0, rarity:"mythic",    desc:"Единственный экземпляр в мире",      owned:false, currentPrice:2000000000,  purchasedAt:null, tuned:false },
+    { carId:"infinity",  name:"Инфинити SS",      icon:"🌟", price:5000000000,  growthPct:20.0, rarity:"mythic",    desc:"Коллекционная жемчужина",            owned:false, currentPrice:5000000000,  purchasedAt:null, tuned:false },
+    { carId:"quantum",   name:"Квант Прототип",   icon:"🌟", price:15000000000, growthPct:22.0, rarity:"mythic",    desc:"Секретная экспериментальная модель", owned:false, currentPrice:15000000000, purchasedAt:null, tuned:false },
+  ];
+}
+
+var RARITY_BONUS = { common:100000, rare:500000, epic:2000000, legendary:10000000, mythic:50000000 };
+var RARITY_LABEL = { common:"Обычная", rare:"Редкая", epic:"Эпическая", legendary:"Легендарная", mythic:"Мифическая" };
+
+var ACHIEVEMENTS = [
+  { id:"first_biz",   icon:"🌯", name:"Первый бизнес",   desc:"Купите бизнес" },
+  { id:"manager",     icon:"👔", name:"Начальник",       desc:"Наймите менеджера" },
+  { id:"millionaire", icon:"💰", name:"Миллионер",       desc:"Накопите 1M ₽" },
+  { id:"billionaire", icon:"💎", name:"Миллиардер",      desc:"Накопите 1B ₽" },
+  { id:"crypto",      icon:"₿",  name:"Крипто-инвестор", desc:"Купите крипту" },
+  { id:"trader",      icon:"📈", name:"Трейдер",         desc:"Купите акции" },
+  { id:"landlord",    icon:"🏠", name:"Арендодатель",    desc:"Купите недвижимость" },
+  { id:"credit",      icon:"💳", name:"Кредитоспособный", desc:"Возьмите кредит" },
+  { id:"gambler",     icon:"🎰", name:"Игрок",           desc:"Сделайте ставку" },
+  { id:"jackpot",     icon:"🎉", name:"Джекпот",         desc:"Сорвите джекпот" },
+  { id:"bankrupt",    icon:"💀", name:"Банкрот",         desc:"Уйдите в минус" },
+  { id:"empire",      icon:"🏛️", name:"Империя",         desc:"5 бизнесов" },
+  { id:"space",       icon:"🚀", name:"Космический",     desc:"Космическая корп." },
+  { id:"tycoon",      icon:"🏦", name:"Магнат",          desc:"Купите Мегабанк" },
+  { id:"debtfree",    icon:"✅", name:"Без долгов",      desc:"Погасите все кредиты" },
+  { id:"first_car",   icon:"🚗", name:"Первое авто",     desc:"Купите машину" },
+  { id:"collector",   icon:"🏆", name:"Коллекционер",    desc:"Купите 5 машин" },
+  { id:"legend",      icon:"🌟", name:"Легенда",         desc:"Легендарная машина" },
+  { id:"mythic_car",  icon:"💫", name:"Миф",             desc:"Мифическая машина" },
+];
+
+// ============================================================
+// ИГРА
+// ============================================================
+var Game = {
+  money: START_MONEY, totalEarned: 0, creditScore: 50, bankruptcyCount: 0, inNegative: false,
+  achievements: [],
+  casinoStats: { bet:0, won:0, lost:0, biggestWin:0, gamesPlayed:0 },
+  upgrades: { incomeMult:1.0, upkeepMult:1.0, insider:false, fastTrade:false, autoTrader:false, creditScoreBonus:0, casinoLuck:0 },
+  businesses: makeBusinesses(), assets: makeAssets(), banks: makeBanks(), loans: [],
+  properties: makeProperties(), upgradeShop: makeUpgrades(), cars: makeCars(),
+  currentTab: "businesses", casinoBet: 1000,
+  bjState: { dealer:[], player:[], deck:[], active:false, bet:0, revealed:false },
+  lastTick: Date.now(), lastAssetTick: Date.now(), lastPropertyTick: Date.now(),
+  lastCarTick: Date.now(), lastLoanTick: Date.now(), lastSave: Date.now(),
+};
+Game.reset = function() {
+  this.money = START_MONEY; this.totalEarned = 0; this.creditScore = 50;
+  this.bankruptcyCount = 0; this.inNegative = false; this.achievements = [];
+  this.casinoStats = { bet:0, won:0, lost:0, biggestWin:0, gamesPlayed:0 };
+  this.upgrades = { incomeMult:1.0, upkeepMult:1.0, insider:false, fastTrade:false, autoTrader:false, creditScoreBonus:0, casinoLuck:0 };
+  this.businesses = makeBusinesses(); this.assets = makeAssets(); this.banks = makeBanks();
+  this.loans = []; this.properties = makeProperties(); this.upgradeShop = makeUpgrades();
+  this.cars = makeCars(); this.currentTab = "businesses"; this.casinoBet = 1000;
+  this.bjState = { dealer:[], player:[], deck:[], active:false, bet:0, revealed:false };
+  this.lastTick = Date.now(); this.lastAssetTick = Date.now(); this.lastPropertyTick = Date.now();
+  this.lastCarTick = Date.now(); this.lastLoanTick = Date.now(); this.lastSave = Date.now();
+};
+function bizCost(b) { return Math.floor(b.baseCost * Math.pow(1.28, b.level)); }
+function bizIncome(b) {
+  if (b.level === 0) return 0;
+  return Math.floor(b.yearly * b.level * Math.pow(1.18, b.level - 1) / 365);
+}
+function bizUpkeep(b) { return Math.floor(bizIncome(b) * b.upkeepPct); }
+function bizMgrCost(b) { return Math.floor(b.baseCost * 0.5); }
+function totalIncome() {
+  var t = 0;
+  for (var i = 0; i < Game.businesses.length; i++) if (Game.businesses[i].hasManager) t += bizIncome(Game.businesses[i]);
+  var reLevel = 0;
+  for (var j = 0; j < Game.upgradeShop.length; j++) if (Game.upgradeShop[j].id === "real_estate") reLevel = Game.upgradeShop[j].level;
+  var rent = 0;
+  for (var k = 0; k < Game.properties.length; k++) {
+    var p = Game.properties[k];
+    if (p.owned && p.tenant) rent += Math.floor(p.currentPrice * p.yieldPct / 100 / 365);
+  }
+  t += rent;
+  t *= Game.upgrades.incomeMult;
+  if (reLevel > 0) t += rent * 0.1 * reLevel;
+  return t;
+}
+function totalUpkeep() {
+  var t = 0;
+  for (var i = 0; i < Game.businesses.length; i++) if (Game.businesses[i].hasManager) t += bizUpkeep(Game.businesses[i]);
+  for (var j = 0; j < Game.properties.length; j++) {
+    var p = Game.properties[j];
+    if (p.owned) {
+      var base = Math.floor(p.currentPrice * 0.015 / 365);
+      var r = p.tenant ? Math.floor(p.currentPrice * p.yieldPct / 100 / 365) : 0;
+      t += Math.floor(r * p.upkeepPct) + base;
+    }
+  }
+  for (var k = 0; k < Game.cars.length; k++) {
+    var c = Game.cars[k];
+    if (c.owned) t += Math.floor(c.currentPrice * 0.03 / 365);
+  }
+  return t * Game.upgrades.upkeepMult;
+}
+function totalDebt() { var s = 0; for (var i = 0; i < Game.loans.length; i++) s += Game.loans[i].remaining; return s; }
+function portfolioValue() { var s = 0; for (var i = 0; i < Game.assets.length; i++) s += Game.assets[i].price * Game.assets[i].amount; return s; }
+function propertyValue() { var s = 0; for (var i = 0; i < Game.properties.length; i++) if (Game.properties[i].owned) s += Game.properties[i].currentPrice; return s; }
+function carsValue() { var s = 0; for (var i = 0; i < Game.cars.length; i++) if (Game.cars[i].owned) s += Game.cars[i].currentPrice; return s; }
+function carsBonus() {
+  var t = 0;
+  for (var i = 0; i < Game.cars.length; i++) {
+    var c = Game.cars[i];
+    if (c.owned) {
+      t += RARITY_BONUS[c.rarity] || 0;
+      if (c.tuned) t += RARITY_BONUS[c.rarity] || 0;
+    }
+  }
+  return t;
+}
+function netWorth() { return Game.money + portfolioValue() + propertyValue() + carsValue() - totalDebt(); }
+
+// ============================================================
+// UI
+// ============================================================
+function updateTopBar() {
+  var moneyEl = document.getElementById("money");
+  moneyEl.textContent = fmtMoney(Game.money) + " ₽";
+  moneyEl.className = "balance" + (Game.money < 0 ? " negative" : "");
+  var inc = totalIncome(); var upk = totalUpkeep(); var net = inc - upk;
+  document.getElementById("income").textContent = "+" + fmtMoney(inc) + " ₽/сек";
+  document.getElementById("upkeep").textContent = "−" + fmtMoney(upk) + " ₽/сек";
+  var netEl = document.getElementById("net-income");
+  netEl.textContent = fmtMoney(net) + " ₽/сек";
+  netEl.style.color = net >= 0 ? "#7CFC00" : "#e53170";
+  document.getElementById("total-earned").textContent = fmtMoney(Game.totalEarned) + " ₽";
+  document.getElementById("total-debt").textContent = fmtMoney(totalDebt()) + " ₽";
+  document.getElementById("networth").textContent = fmtMoney(netWorth()) + " ₽";
+}
+
+function renderBusinesses() {
+  var el = document.getElementById("tab-businesses");
+  var html = '<div class="content-header">Зелёная кнопка — хватает денег, красная — нет.</div>';
+  for (var i = 0; i < Game.businesses.length; i++) {
+    var b = Game.businesses[i];
+    var cost = bizCost(b);
+    var maxed = b.level >= b.maxLevel;
+    var canBuy = !maxed && Game.money >= cost;
+    var mgrCost = bizMgrCost(b);
+    var canHire = !b.hasManager && b.level > 0 && Game.money >= mgrCost;
+    var status = b.hasManager ? "✅ Работает" : (b.level === 0 ? "❌ Не куплен" : "⚠️ Нужен менеджер");
+    var statusColor = b.hasManager ? "#2cb67d" : (b.level === 0 ? "#94a1b2" : "#ffd700");
+    html += '<div class="card">' +
+      '<div class="card-icon">' + b.icon + '</div>' +
+      '<div class="card-main">' +
+        '<div class="card-title">' + escHtml(b.name) + '</div>' +
+        '<div class="card-sub" style="color:' + statusColor + '">' + status + ' · Ур. ' + b.level + '/' + b.maxLevel + '</div>' +
+        '<div class="card-info">' +
+          '<span style="color:#7CFC00">💵 ' + fmtMoney(bizIncome(b)) + ' ₽/сек</span>' +
+          '<span style="color:#e53170">📉 ' + fmtMoney(bizUpkeep(b)) + ' ₽/сек</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button class="buy-btn ' + (canBuy ? "affordable" : "") + '" ' + (!canBuy ? "disabled" : "") + ' onclick="buyBusiness(' + i + ')" type="button">' +
+          (maxed ? "✓ МАКС" : "Купить L" + (b.level+1) + "<br>" + fmtMoney(cost) + " ₽") +
+        '</button>' +
+        '<button class="buy-btn ' + (canHire ? "affordable" : "") + '" ' + (!canHire ? "disabled" : "") + ' onclick="hireManager(' + i + ')" type="button">' +
+          (b.hasManager ? "👔 Менеджер ✓" : (b.level === 0 ? "👔 Сначала купите" : "👔 Нанять<br>" + fmtMoney(mgrCost) + " ₽")) +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderMarket() {
+  var el = document.getElementById("tab-market");
+  var html = '<div class="content-header">💡 Можно вводить: 5, 100, 1 000, 1.5M, 2K</div>';
+  html += '<h2 style="color:#ffd700;font-size:14px;margin:10px 0 8px;letter-spacing:1px">🪙 КРИПТОВАЛЮТЫ</h2>';
+  html += renderAssetGroup("crypto");
+  html += '<h2 style="color:#2cb67d;font-size:14px;margin:18px 0 8px;letter-spacing:1px">📊 АКЦИИ</h2>';
+  html += renderAssetGroup("stock");
+  el.innerHTML = html;
+  setTimeout(drawAllGraphs, 20);
+}
+function renderAssetGroup(kind) {
+  var html = "";
+  for (var i = 0; i < Game.assets.length; i++) {
+    var a = Game.assets[i];
+    if (a.kind !== kind) continue;
+    var prev = a.history.length > 1 ? a.history[a.history.length - 2] : a.price;
+    var change = prev > 0 ? ((a.price - prev) / prev * 100) : 0;
+    var cc = change >= 0 ? "#2cb67d" : "#e53170";
+    var arrow = change >= 0 ? "▲" : "▼";
+    var posHtml = "В наличии: 0"; var posColor = "#94a1b2";
+    if (a.amount > 0) {
+      var profit = (a.price - a.avgBuy) * a.amount;
+      posColor = profit >= 0 ? "#2cb67d" : "#e53170";
+      posHtml = "В наличии: " + fmtQty(a.amount) + " | " + fmtMoney(a.price * a.amount) + " ₽ | " + (profit >= 0 ? "▲" : "▼") + fmtMoney(Math.abs(profit)) + " ₽";
+    }
+    var buyBtns = "";
+    var qtys = [1, 10, 100];
+    for (var q = 0; q < qtys.length; q++) {
+      var qty = qtys[q];
+      var cost = a.price * qty;
+      var can = Game.money >= cost;
+      buyBtns += '<button class="market-btn ' + (can ? "affordable" : "") + '" ' + (!can ? "disabled" : "") + ' onclick="buyAsset(' + i + ',' + qty + ')" type="button">×' + qty + '<br>' + fmtPrice(cost) + ' ₽</button>';
+    }
+    var sellBtns = "";
+    for (var s = 0; s < qtys.length; s++) {
+      var q2 = qtys[s];
+      var can2 = a.amount >= q2;
+      sellBtns += '<button class="market-btn ' + (can2 ? "affordable" : "") + '" ' + (!can2 ? "disabled" : "") + ' onclick="sellAsset(' + i + ',' + q2 + ')" type="button">SELL ×' + q2 + '</button>';
+    }
+    var sellAllBtn = '<button class="market-btn ' + (a.amount > 0 ? "affordable" : "") + '" ' + (a.amount <= 0 ? "disabled" : "") + ' onclick="sellAll(' + i + ')" type="button">SELL ALL</button>';
+    html += '<div class="card">' +
+      '<div class="card-icon">' + a.icon + '</div>' +
+      '<div class="card-main">' +
+        '<div class="card-title">' + a.ticker + ' — ' + escHtml(a.name) + '</div>' +
+        '<div class="card-sub" style="color:' + cc + ';font-size:14px">' + arrow + ' ' + change.toFixed(2) + '%  |  ' + fmtPrice(a.price) + ' ₽</div>' +
+        '<div class="mini-graph"><canvas id="graph-' + i + '" width="600" height="60"></canvas></div>' +
+        '<div class="card-sub" style="color:' + posColor + '">' + posHtml + '</div>' +
+        '<div class="market-buttons">' + buyBtns + '</div>' +
+        '<div class="market-buttons">' + sellAllBtn + sellBtns + '</div>' +
+        '<div class="input-row">' +
+          '<input class="num-input" id="buy-qty-' + i + '" type="text" placeholder="Своё кол-во" value="1">' +
+          '<button onclick="buyAssetCustom(' + i + ')" type="button">Купить N</button>' +
+          '<input class="num-input" id="sell-qty-' + i + '" type="text" placeholder="Своё кол-во" value="1">' +
+          '<button onclick="sellAssetCustom(' + i + ')" type="button">Продать N</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  return html;
+}
+function drawAllGraphs() { for (var i = 0; i < Game.assets.length; i++) drawGraph("graph-" + i, Game.assets[i]); }
+function drawGraph(canvasId, asset) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var rect = canvas.getBoundingClientRect();
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  var ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  var w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+  var hist = asset.history;
+  if (hist.length < 2) return;
+  var mn = Math.min.apply(null, hist); var mx = Math.max.apply(null, hist);
+  var rng = mx - mn || 1;
+  var rising = hist[hist.length - 1] >= hist[0];
+  var color = rising ? "#2cb67d" : "#e53170";
+  var points = [];
+  for (var i = 0; i < hist.length; i++) points.push([(i / (hist.length - 1)) * w, h - ((hist[i] - mn) / rng) * (h - 8) - 4]);
+  ctx.beginPath(); ctx.moveTo(0, h);
+  for (var j = 0; j < points.length; j++) ctx.lineTo(points[j][0], points[j][1]);
+  ctx.lineTo(w, h); ctx.closePath();
+  ctx.fillStyle = rising ? "rgba(44,182,125,0.25)" : "rgba(229,49,112,0.25)";
+  ctx.fill();
+  ctx.beginPath();
+  for (var k = 0; k < points.length; k++) {
+    if (k === 0) ctx.moveTo(points[k][0], points[k][1]);
+    else ctx.lineTo(points[k][0], points[k][1]);
+  }
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
+  var last = points[points.length - 1];
+  ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 2 * Math.PI);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function renderProperty() {
+  var el = document.getElementById("tab-property");
+  var html = '<div class="content-header">Реальные цены на рынке РФ. Растут со временем.</div>';
+  for (var i = 0; i < Game.properties.length; i++) {
+    var p = Game.properties[i];
+    var ratio = p.currentPrice / p.price;
+    var trendTxt = "— стабильно", trendColor = "#94a1b2";
+    if (ratio > 1.02) { trendTxt = "▲ +" + ((ratio-1)*100).toFixed(1) + "%"; trendColor = "#2cb67d"; }
+    else if (ratio < 0.98) { trendTxt = "▼ " + ((ratio-1)*100).toFixed(1) + "%"; trendColor = "#e53170"; }
+    var rent = (p.owned && p.tenant) ? fmtMoney(Math.floor(p.currentPrice * p.yieldPct / 100 / 365)) + " ₽/сек" : "0 ₽/сек";
+    var actions;
+    if (p.owned) {
+      actions = '<button class="buy-btn" disabled type="button">✓ Куплено</button>' +
+        '<button class="buy-btn affordable" onclick="toggleTenant(' + i + ')" type="button">' + (p.tenant ? "👥 Убрать жильца" : "👥 Заселить") + '</button>' +
+        '<button class="buy-btn affordable" onclick="sellProperty(' + i + ')" type="button">💰 Продать<br>' + fmtMoney(p.currentPrice) + ' ₽</button>';
+    } else {
+      var cb = Game.money >= p.currentPrice; var cm = Game.money >= p.currentPrice * 0.2;
+      actions = '<button class="buy-btn ' + (cb ? "affordable" : "") + '" ' + (!cb ? "disabled" : "") + ' onclick="buyProperty(' + i + ')" type="button">Купить<br>' + fmtMoney(p.currentPrice) + ' ₽</button>' +
+        '<button class="buy-btn ' + (cm ? "affordable" : "") + '" ' + (!cm ? "disabled" : "") + ' onclick="mortgageProperty(' + i + ')" type="button">🏦 Ипотека<br>взнос ' + fmtMoney(p.currentPrice * 0.2) + ' ₽</button>';
+    }
+    html += '<div class="card">' +
+      '<div class="card-icon">' + p.icon + '</div>' +
+      '<div class="card-main">' +
+        '<div class="card-title">' + escHtml(p.name) + '</div>' +
+        '<div class="card-sub" style="color:' + trendColor + '">' + trendTxt + '</div>' +
+        '<div class="card-info">' +
+          '<span style="color:#7f5af0">💰 ' + fmtMoney(p.currentPrice) + ' ₽ (' + p.yieldPct + '%/год)</span>' +
+          '<span style="color:#7CFC00">🏠 ' + rent + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-actions">' + actions + '</div>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ГАРАЖ с SVG-иконками
+function renderCars() {
+  var el = document.getElementById("tab-cars");
+  var ownedCount = 0, totalValue = 0;
+  for (var i = 0; i < Game.cars.length; i++) {
+    if (Game.cars[i].owned) { ownedCount++; totalValue += Game.cars[i].currentPrice; }
+  }
+  var bonus = carsBonus();
+  var html = '<div class="content-header">' +
+    '🚗 Куплено: <b style="color:#fff">' + ownedCount + '/' + Game.cars.length + '</b>  |  ' +
+    '💰 Стоимость гаража: <b style="color:#ffd700">' + fmtMoney(totalValue) + ' ₽</b>  |  ' +
+    '⭐ Бонус к счёту: <b style="color:#7CFC00">+' + fmtMoney(bonus) + ' очков</b>' +
+    '</div>';
+
+  var rarities = ["common", "rare", "epic", "legendary", "mythic"];
+  for (var r = 0; r < rarities.length; r++) {
+    var rarity = rarities[r];
+    var carsInRarity = [];
+    for (var ci = 0; ci < Game.cars.length; ci++) {
+      if (Game.cars[ci].rarity === rarity) carsInRarity.push({ idx: ci, car: Game.cars[ci] });
+    }
+    if (carsInRarity.length === 0) continue;
+    html += '<div class="rarity-header ' + rarity + '">◆ ' + RARITY_LABEL[rarity] + '</div>';
+    for (var j = 0; j < carsInRarity.length; j++) {
+      var idx = carsInRarity[j].idx;
+      var c = carsInRarity[j].car;
+      var infoTxt = "";
+      if (c.owned) {
+        var gainPct = (c.currentPrice / c.price - 1) * 100;
+        var tunedTxt = c.tuned ? " | 🔧 Тюнинг" : "";
+        infoTxt = '<div class="card-sub" style="color:' + (gainPct >= 0 ? "#2cb67d" : "#e53170") + '">' +
+          '💰 ' + fmtMoney(c.currentPrice) + ' ₽  |  +' + gainPct.toFixed(1) + '% к базовой  |  ' +
+          '📈 +' + c.growthPct + '%/год' + tunedTxt + '</div>';
+      } else {
+        infoTxt = '<div class="card-sub">💰 ' + fmtMoney(c.currentPrice) + ' ₽  |  📈 +' + c.growthPct + '%/год</div>';
+      }
+      var actions = "";
+      if (c.owned) {
+        actions = '<button class="buy-btn" disabled style="color:#7CFC00" type="button">✓ В гараже</button>';
+        var tuneCost = Math.floor(c.currentPrice * 0.15);
+        if (c.tuned) {
+          actions += '<button class="buy-btn" disabled style="color:#7CFC00" type="button">🔧 Тюнинг ✓</button>';
+        } else {
+          var canTune = Game.money >= tuneCost;
+          actions += '<button class="buy-btn ' + (canTune ? "affordable" : "") + '" ' + (!canTune ? "disabled" : "") + ' onclick="tuneCar(' + idx + ')" type="button">🔧 Тюнинг<br>' + fmtMoney(tuneCost) + ' ₽</button>';
+        }
+        actions += '<button class="buy-btn affordable" onclick="sellCar(' + idx + ')" type="button">💰 Продать<br>' + fmtMoney(c.currentPrice) + ' ₽</button>';
+      } else {
+        var can = Game.money >= c.currentPrice;
+        actions = '<button class="buy-btn ' + (can ? "affordable" : "") + '" ' + (!can ? "disabled" : "") + ' onclick="buyCar(' + idx + ')" type="button">Купить<br>' + fmtMoney(c.currentPrice) + ' ₽</button>';
+      }
+      html += '<div class="car-card ' + rarity + '">' +
+        '<div class="car-icon-wrap">' + carSvg(c.carId) + '</div>' +
+        '<div class="card-main">' +
+          '<div class="card-title">' + escHtml(c.name) + ' <span style="color:var(--rar-' + rarity + ');font-size:11px">[' + RARITY_LABEL[rarity] + ']</span></div>' +
+          '<div class="card-sub">' + escHtml(c.desc) + '</div>' +
+          infoTxt +
+        '</div>' +
+        '<div class="card-actions">' + actions + '</div>' +
+      '</div>';
+    }
+  }
+  el.innerHTML = html;
+}
+
+function renderBank() {
+  var el = document.getElementById("tab-bank");
+  var html = '<div class="content-header">Введите сумму кредита. Автопогашение каждую минуту.</div>';
+  for (var i = 0; i < Game.banks.length; i++) {
+    var b = Game.banks[i];
+    var ok = Game.creditScore >= b.minScore;
+    html += '<div class="card">' +
+      '<div class="card-icon">' + b.icon + '</div>' +
+      '<div class="card-main">' +
+        '<div class="card-title">' + escHtml(b.name) + '</div>' +
+        '<div class="card-sub" style="color:#ff9f1c">Ставка: ' + b.rate + '% | Срок: ' + b.termDays + ' дней | Макс: ' + fmtMoney(b.maxLoan) + ' ₽</div>' +
+        (!ok ? '<div class="card-sub" style="color:#e53170">🔒 Нужен рейтинг ' + b.minScore + '+ (у вас ' + Game.creditScore + ')</div>' : '') +
+        '<div class="input-row">' +
+          '<input class="num-input" id="loan-input-' + i + '" type="text" value="' + Math.min(b.maxLoan, 100000) + '">' +
+          '<button onclick="setLoanPct(' + i + ',0.25)" type="button">25%</button>' +
+          '<button onclick="setLoanPct(' + i + ',0.5)" type="button">50%</button>' +
+          '<button onclick="setLoanPct(' + i + ',1)" type="button">100%</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button class="buy-btn ' + (ok ? "affordable" : "") + '" ' + (!ok ? "disabled" : "") + ' onclick="takeLoan(' + i + ')" type="button">' + (ok ? "Взять кредит" : "🔒 Рейтинг") + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+  html += '<h2 style="color:#ff9f1c;font-size:14px;margin:18px 0 10px;letter-spacing:1px">💳 АКТИВНЫЕ КРЕДИТЫ (' + Game.loans.length + ')</h2>';
+  if (Game.loans.length === 0) {
+    html += '<div style="text-align:center;color:#94a1b2;padding:30px;background:var(--bg-card);border-radius:12px">Нет активных кредитов</div>';
+  } else {
+    for (var k = 0; k < Game.loans.length; k++) {
+      var loan = Game.loans[k];
+      var elapsed = (Date.now() - loan.createdAt) / 60000;
+      var daysLeft = Math.max(0, loan.termDays - Math.floor(elapsed));
+      var totalOrig = loan.principal * (1 + loan.ratePct / 100 * loan.termDays / 365);
+      var paidPct = Math.max(0, Math.min(100, (1 - loan.remaining / totalOrig) * 100));
+      var overdue = daysLeft <= 0 && loan.remaining > 1;
+      html += '<div class="loan-card">' +
+        '<div class="card-title" style="color:' + (overdue ? "#e53170" : "#fff") + '">' + escHtml(loan.bankName) + (overdue ? " ⚠️ ПРОСРОЧКА" : "") + '</div>' +
+        '<div class="loan-progress"><div style="width:' + paidPct + '%"></div></div>' +
+        '<div class="loan-detail">' +
+          '<div>💵 Получено: <b>' + fmtMoney(loan.principal) + ' ₽</b></div>' +
+          '<div>📉 Остаток: <b>' + fmtMoney(loan.remaining) + ' ₽</b></div>' +
+          '<div>💳 Платёж/день: <b>' + fmtMoney(loan.dailyPayment) + ' ₽</b></div>' +
+          '<div>⏳ Дней: <b>' + daysLeft + '/' + loan.termDays + '</b></div>' +
+          '<div>📊 Ставка: <b>' + loan.ratePct + '%</b></div>' +
+          '<div>✅ Выплачено: <b>' + paidPct.toFixed(0) + '%</b></div>' +
+        '</div>' +
+        '<div class="loan-actions">' +
+          '<button class="pay" ' + (Game.money < Math.min(loan.dailyPayment * 30, loan.remaining) ? "disabled" : "") + ' onclick="payMinLoan(' + k + ')" type="button">Оплатить 30 дней<br>' + fmtMoney(Math.min(loan.dailyPayment * 30, loan.remaining)) + ' ₽</button>' +
+          '<button class="pay" ' + (Game.money < loan.remaining ? "disabled" : "") + ' onclick="earlyRepay(' + k + ')" type="button">Досрочно<br>' + fmtMoney(loan.remaining) + ' ₽</button>' +
+        '</div>' +
+        '<div class="input-row">' +
+          '<input class="num-input" id="custom-pay-' + k + '" type="text" placeholder="Например: 50 000">' +
+          '<button onclick="payCustomLoan(' + k + ')" type="button">Оплатить N</button>' +
+        '</div>' +
+      '</div>';
+    }
+  }
+  el.innerHTML = html;
+}
+
+function renderCasino() {
+  var el = document.getElementById("tab-casino");
+  var s = Game.casinoStats;
+  var totalNet = s.won - s.lost;
+  var sign = totalNet >= 0 ? "+" : "−";
+  var bet = Math.floor(parseNum(Game.casinoBet)) || 0;
+  var canBet = bet > 0 && bet <= Game.money;
+  var html = '<div class="casino-top"><label>💰 Ставка:</label>' +
+    '<input type="text" id="casino-bet-input" value="' + Game.casinoBet + '">' +
+    '<button class="quick-bet" onclick="setBet(1000)" type="button">1 000</button>' +
+    '<button class="quick-bet" onclick="setBet(10000)" type="button">10 000</button>' +
+    '<button class="quick-bet" onclick="setBet(100000)" type="button">100 000</button>' +
+    '<button class="quick-bet" onclick="setBet(1000000)" type="button">1 000 000</button>' +
+    '<button class="quick-bet max" onclick="setBetMax()" type="button">MAX</button>' +
+    '<span style="margin-left:8px;color:#666;font-size:11px;font-style:italic">Примеры: 500, 5K, 1.5M</span>' +
+  '</div>';
+  html += '<div class="casino-stats">📊 Игр: ' + s.gamesPlayed + ' | Ставок: ' + fmtMoney(s.bet) + ' ₽ | ✅ Выиграно: ' + fmtMoney(s.won) + ' ₽ | ❌ Проиграно: ' + fmtMoney(s.lost) + ' ₽ | Итог: ' + sign + fmtMoney(Math.abs(totalNet)) + ' ₽ | 🏆 Рекорд: ' + fmtMoney(s.biggestWin) + ' ₽</div>';
+  html += '<div class="casino-games">';
+  html += '<div class="casino-game">' +
+    '<div class="game-title">🎡 РУЛЕТКА</div>' +
+    '<div class="roulette-result" id="roulette-result"><span class="roulette-num">❓</span></div>' +
+    '<div class="roulette-info" id="roulette-info">Красное/Чёрное ×2 · Зеро ×14 · Чётное ×2</div>' +
+    '<div class="roulette-buttons">' +
+      '<button class="roulette-btn ' + (canBet ? "affordable" : "") + '" ' + (!canBet ? "disabled" : "") + ' onclick="playRoulette(\'red\')" type="button">🔴 КРАСНОЕ ×2</button>' +
+      '<button class="roulette-btn ' + (canBet ? "affordable" : "") + '" ' + (!canBet ? "disabled" : "") + ' onclick="playRoulette(\'black\')" type="button">⚫ ЧЁРНОЕ ×2</button>' +
+      '<button class="roulette-btn ' + (canBet ? "affordable" : "") + '" ' + (!canBet ? "disabled" : "") + ' onclick="playRoulette(\'zero\')" type="button">🟢 ЗЕРО ×14</button>' +
+      '<button class="roulette-btn ' + (canBet ? "affordable" : "") + '" ' + (!canBet ? "disabled" : "") + ' onclick="playRoulette(\'even\')" type="button">🟩 ЧЁТНОЕ ×2</button>' +
+    '</div>' +
+  '</div>';
+  var dealerCardsHtml = "", playerCardsHtml = "";
+  var dealerScore = "—", playerScore = "—";
+  if (Game.bjState.player.length > 0) {
+    playerCardsHtml = renderHandHtml(Game.bjState.player, -1);
+    playerScore = handValue(Game.bjState.player);
+  }
+  if (Game.bjState.dealer.length > 0) {
+    var hideIdx = (Game.bjState.active && !Game.bjState.revealed) ? 1 : -1;
+    dealerCardsHtml = renderHandHtml(Game.bjState.dealer, hideIdx);
+    if (hideIdx === 1) dealerScore = cardValue(Game.bjState.dealer[0]) + " + ?";
+    else dealerScore = handValue(Game.bjState.dealer);
+  }
+  html += '<div class="casino-game bj">' +
+    '<div class="game-title">🃏 БЛЭКДЖЕК</div>' +
+    '<div class="bj-table">' +
+      '<div class="bj-section">' +
+        '<div class="bj-label"><span>Дилер</span><span class="bj-score">' + dealerScore + '</span></div>' +
+        '<div class="bj-cards">' + dealerCardsHtml + '</div>' +
+      '</div>' +
+      '<div class="bj-section">' +
+        '<div class="bj-label"><span>Вы</span><span class="bj-score">' + playerScore + '</span></div>' +
+        '<div class="bj-cards">' + playerCardsHtml + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="bj-status" id="bj-status">' + (Game.bjState.active ? "Ваш ход" : "Нажмите Раздать") + '</div>' +
+    '<div class="bj-buttons">' +
+      '<button class="bj-btn ' + (canBet && !Game.bjState.active ? "affordable" : "") + '" ' + (!canBet || Game.bjState.active ? "disabled" : "") + ' onclick="bjDeal()" type="button">🃏 Раздать</button>' +
+      '<button class="bj-btn ' + (Game.bjState.active ? "affordable green" : "") + '" ' + (!Game.bjState.active ? "disabled" : "") + ' onclick="bjHit()" type="button">➕ Взять</button>' +
+      '<button class="bj-btn ' + (Game.bjState.active ? "affordable green" : "") + '" ' + (!Game.bjState.active ? "disabled" : "") + ' onclick="bjStand()" type="button">✋ Хватит</button>' +
+    '</div>' +
+  '</div>';
+  html += '<div class="casino-game slots">' +
+    '<div class="game-title">🎰 СЛОТЫ</div>' +
+    '<div class="slot-reels">' +
+      '<div class="reel">❓</div><div class="reel">❓</div><div class="reel">❓</div>' +
+    '</div>' +
+    '<div class="slots-legend">' +
+      '<span>🍒🍒🍒 = ×5</span><span>💎💎💎 = ×20</span><span>7️⃣7️⃣7️⃣ = ×50</span><span>2 = ×1.5</span>' +
+    '</div>' +
+    '<div class="slots-result" id="slots-result">Крутите барабаны!</div>' +
+    '<button class="slots-btn ' + (canBet ? "affordable" : "") + '" ' + (!canBet ? "disabled" : "") + ' onclick="playSlots()" type="button">🎰 КРУТИТЬ (ставка ' + fmtMoney(bet) + ' ₽)</button>' +
+  '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderUpgrades() {
+  var el = document.getElementById("tab-upgrades");
+  var html = '<div class="content-header">Постоянные улучшения вашей империи.</div>';
+  for (var i = 0; i < Game.upgradeShop.length; i++) {
+    var u = Game.upgradeShop[i];
+    var maxed = u.level >= u.max;
+    var cost = Math.floor(u.baseCost * Math.pow(u.growth, u.level));
+    var can = !maxed && Game.money >= cost;
+    html += '<div class="upgrade-card">' +
+      '<div class="upgrade-icon">' + u.icon + '</div>' +
+      '<div class="upgrade-main">' +
+        '<div class="upgrade-title">' + escHtml(u.name) + '</div>' +
+        '<div class="upgrade-desc">' + escHtml(u.desc) + '</div>' +
+        '<div class="upgrade-level">Ур. ' + u.level + '/' + u.max + '</div>' +
+      '</div>' +
+      '<button class="upgrade-buy ' + (can ? "affordable" : "") + '" ' + (!can ? "disabled" : "") + ' onclick="buyUpgrade(' + i + ')" type="button">' +
+        (maxed ? "✓ MAX" : fmtMoney(cost) + " ₽") +
+      '</button>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderLeaders() {
+  var el = document.getElementById("tab-leaders");
+  var html = '<div class="leaders-panel">' +
+    '<div class="leaders-title">🏆 ДОСТИЖЕНИЯ</div>' +
+    '<div class="leaders-sub">Открыто: ' + Game.achievements.length + '/' + ACHIEVEMENTS.length + '</div>' +
+    '<div class="achievements-grid">';
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var a = ACHIEVEMENTS[i];
+    var has = Game.achievements.indexOf(a.id) !== -1;
+    html += '<div class="achv ' + (has ? "unlocked" : "locked") + '">' +
+      '<div class="achv-icon">' + a.icon + '</div>' +
+      '<div class="achv-name">' + a.name + '</div>' +
+      '<div class="achv-desc">' + a.desc + '</div>' +
+    '</div>';
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
+function switchTab(tab) {
+  Game.currentTab = tab;
+  var tabs = document.querySelectorAll(".tab-content");
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+  var t = document.getElementById("tab-" + tab);
+  if (t) t.classList.add("active");
+  var btns = document.querySelectorAll(".tab[data-tab]");
+  for (var j = 0; j < btns.length; j++) {
+    if (btns[j].getAttribute("data-tab") === tab) btns[j].classList.add("active");
+    else btns[j].classList.remove("active");
+  }
+  refreshCurrentTab();
+}
+function refreshCurrentTab() {
+  var tab = Game.currentTab;
+  if (tab === "businesses") renderBusinesses();
+  else if (tab === "market") renderMarket();
+  else if (tab === "property") renderProperty();
+  else if (tab === "cars") renderCars();
+  else if (tab === "bank") renderBank();
+  else if (tab === "casino") renderCasino();
+  else if (tab === "upgrades") renderUpgrades();
+  else if (tab === "leaders") renderLeaders();
+}
+function refreshUI() { updateTopBar(); refreshCurrentTab(); }
+
+// ============================================================
+// ДЕЙСТВИЯ (все сохранены как были)
+// ============================================================
+function buyBusiness(idx) {
+  var b = Game.businesses[idx];
+  if (b.level >= b.maxLevel) return;
+  var cost = bizCost(b);
+  if (Game.money < cost) { notify("Не хватает " + fmtMoney(cost) + " ₽", "error"); return; }
+  Game.money -= cost; b.level++;
+  notify(b.name + " → ур. " + b.level, "success");
+  checkAchievements(); refreshUI();
+}
+function hireManager(idx) {
+  var b = Game.businesses[idx];
+  if (b.hasManager || b.level < 1) return;
+  var cost = bizMgrCost(b);
+  if (Game.money < cost) { notify("Не хватает " + fmtMoney(cost) + " ₽", "error"); return; }
+  Game.money -= cost; b.hasManager = true;
+  notify("Менеджер нанят в " + b.name, "success");
+  checkAchievements(); refreshUI();
+}
+function buyAssetCustom(idx) {
+  var inp = document.getElementById("buy-qty-" + idx);
+  if (!inp) return;
+  var qty = Math.floor(parseNum(inp.value));
+  if (qty <= 0) { showInputError(inp); return; }
+  buyAsset(idx, qty);
+}
+function sellAssetCustom(idx) {
+  var inp = document.getElementById("sell-qty-" + idx);
+  if (!inp) return;
+  var qty = Math.floor(parseNum(inp.value));
+  if (qty <= 0) { showInputError(inp); return; }
+  sellAsset(idx, qty);
+}
+function showInputError(inp) {
+  inp.classList.add("error");
+  notify("Введите число больше 0. Примеры: 5, 100, 1.5M", "error");
+  setTimeout(function() { inp.classList.remove("error"); }, 1000);
+}
+function buyAsset(idx, qty) {
+  var a = Game.assets[idx];
+  var cost = a.price * qty;
+  if (cost > Game.money) { notify("Не хватает " + fmtMoney(cost) + " ₽", "error"); return; }
+  var total = a.avgBuy * a.amount + cost;
+  a.amount += qty; a.avgBuy = a.amount > 0 ? total / a.amount : 0;
+  Game.money -= cost;
+  notify("Куплено " + qty + " " + a.ticker, "success");
+  checkAchievements(); refreshUI();
+}
+function sellAsset(idx, qty) {
+  var a = Game.assets[idx];
+  if (qty > a.amount) { notify("Недостаточно " + a.ticker, "error"); return; }
+  var gained = a.price * qty;
+  a.amount -= qty;
+  if (a.amount < 1e-9) { a.amount = 0; a.avgBuy = 0; }
+  Game.money += gained;
+  notify("Продано " + qty + " " + a.ticker + " за " + fmtMoney(gained) + " ₽", "success");
+  refreshUI();
+}
+function sellAll(idx) {
+  var a = Game.assets[idx];
+  if (a.amount <= 0) return;
+  var gained = a.price * a.amount;
+  Game.money += gained;
+  notify("Продано всё " + a.ticker + " за " + fmtMoney(gained) + " ₽", "success");
+  a.amount = 0; a.avgBuy = 0; refreshUI();
+}
+function buyProperty(idx) {
+  var p = Game.properties[idx];
+  if (p.owned) return;
+  if (Game.money < p.currentPrice) { notify("Не хватает " + fmtMoney(p.currentPrice) + " ₽", "error"); return; }
+  Game.money -= p.currentPrice;
+  p.owned = true; p.tenant = true;
+  notify(p.name + " куплено!", "success");
+  checkAchievements(); refreshUI();
+}
+function mortgageProperty(idx) {
+  var p = Game.properties[idx];
+  if (p.owned) return;
+  var down = p.currentPrice * 0.2;
+  if (Game.money < down) { notify("Нужен взнос " + fmtMoney(down) + " ₽", "error"); return; }
+  showConfirm("Ипотека 18% годовых\nВзнос: " + fmtMoney(down) + " ₽\nКредит: " + fmtMoney(p.currentPrice - down) + " ₽\nСрок: 365 дней", function() {
+    Game.money -= down;
+    var principal = p.currentPrice - down;
+    var mortgage = {
+      bankId: "mortgage", bankName: "Ипотека",
+      principal: principal, remaining: principal * 1.18,
+      ratePct: 18, termDays: 365, createdAt: Date.now(),
+      dailyPayment: principal * 1.18 / 365,
+    };
+    p.mortgage = mortgage; p.owned = true; p.tenant = true;
+    Game.loans.push(mortgage);
+    notify("Ипотека оформлена!", "success");
+    checkAchievements(); refreshUI();
+  });
+}
+function toggleTenant(idx) {
+  var p = Game.properties[idx];
+  if (!p.owned) return;
+  p.tenant = !p.tenant; refreshUI();
+}
+function sellProperty(idx) {
+  var p = Game.properties[idx];
+  if (!p.owned) return;
+  var price = p.currentPrice;
+  showConfirm("Продать «" + p.name + "» за " + fmtMoney(price) + " ₽?", function() {
+    Game.money += price;
+    if (p.mortgage) {
+      Game.money -= p.mortgage.remaining;
+      for (var i = 0; i < Game.loans.length; i++) {
+        if (Game.loans[i] === p.mortgage) { Game.loans.splice(i, 1); break; }
+      }
+      p.mortgage = null;
+    }
+    p.owned = false; p.tenant = false;
+    notify("Продано за " + fmtMoney(price) + " ₽", "success");
+    refreshUI();
+  });
+}
+function buyCar(idx) {
+  var c = Game.cars[idx];
+  if (c.owned) return;
+  if (Game.money < c.currentPrice) { notify("Не хватает " + fmtMoney(c.currentPrice) + " ₽", "error"); return; }
+  Game.money -= c.currentPrice;
+  c.owned = true; c.purchasedAt = Date.now();
+  notify(c.name + " — в гараже!", "success");
+  checkAchievements(); refreshUI();
+}
+function tuneCar(idx) {
+  var c = Game.cars[idx];
+  if (!c.owned || c.tuned) return;
+  var cost = Math.floor(c.currentPrice * 0.15);
+  if (Game.money < cost) { notify("Нужно " + fmtMoney(cost) + " ₽", "error"); return; }
+  Game.money -= cost;
+  c.tuned = true;
+  c.currentPrice = Math.floor(c.currentPrice * 1.20);
+  notify("🔧 " + c.name + " тюнингована!", "success");
+  refreshUI();
+}
+function sellCar(idx) {
+  var c = Game.cars[idx];
+  if (!c.owned) return;
+  var price = c.currentPrice;
+  showConfirm("Продать «" + c.name + "» за " + fmtMoney(price) + " ₽?", function() {
+    Game.money += price;
+    c.owned = false; c.tuned = false;
+    c.currentPrice = c.price; c.purchasedAt = null;
+    notify("Продано за " + fmtMoney(price) + " ₽", "success");
+    refreshUI();
+  });
+}
+function setLoanPct(idx, pct) {
+  var inp = document.getElementById("loan-input-" + idx);
+  if (inp) inp.value = Math.floor(Game.banks[idx].maxLoan * pct);
+}
+function takeLoan(idx) {
+  var bank = Game.banks[idx];
+  if (Game.creditScore < bank.minScore) { notify("Нужен рейтинг " + bank.minScore + "+", "error"); return; }
+  var inp = document.getElementById("loan-input-" + idx);
+  if (!inp) return;
+  var amount = parseNum(inp.value);
+  if (amount <= 0) { showInputError(inp); return; }
+  if (amount > bank.maxLoan) { notify("Макс. " + fmtMoney(bank.maxLoan) + " ₽", "error"); return; }
+  if (totalDebt() + amount > bank.limit) { notify("Превышен лимит банка", "error"); return; }
+  var total = amount * (1 + bank.rate / 100 * bank.termDays / 365);
+  var daily = total / bank.termDays;
+  showConfirm(bank.name + "\nСумма: " + fmtMoney(amount) + " ₽\nСтавка: " + bank.rate + "%\nСрок: " + bank.termDays + " дней\nК возврату: " + fmtMoney(total) + " ₽\nПлатёж: " + fmtMoney(daily) + " ₽/день", function() {
+    Game.loans.push({
+      bankId: bank.bankId, bankName: bank.name,
+      principal: amount, remaining: total,
+      ratePct: bank.rate, termDays: bank.termDays,
+      dailyPayment: daily, createdAt: Date.now(),
+    });
+    Game.money += amount;
+    notify("Кредит " + fmtMoney(amount) + " ₽ получен", "success");
+    checkAchievements(); refreshUI();
+  });
+}
+function payMinLoan(idx) {
+  if (idx >= Game.loans.length) return;
+  var loan = Game.loans[idx];
+  var pay = Math.min(loan.dailyPayment * 30, loan.remaining);
+  if (Game.money < pay) { notify("Не хватает " + fmtMoney(pay) + " ₽", "error"); return; }
+  loan.remaining -= pay; Game.money -= pay;
+  if (loan.remaining <= 1) closeLoan(idx, 5);
+  refreshUI();
+}
+function earlyRepay(idx) {
+  if (idx >= Game.loans.length) return;
+  var loan = Game.loans[idx];
+  if (Game.money < loan.remaining) { notify("Не хватает " + fmtMoney(loan.remaining) + " ₽", "error"); return; }
+  showConfirm("Списать " + fmtMoney(loan.remaining) + " ₽ и закрыть кредит?", function() {
+    Game.money -= loan.remaining;
+    loan.remaining = 0;
+    closeLoan(idx, 8); refreshUI();
+  });
+}
+function payCustomLoan(idx) {
+  if (idx >= Game.loans.length) return;
+  var inp = document.getElementById("custom-pay-" + idx);
+  if (!inp) return;
+  var amount = parseNum(inp.value);
+  if (amount <= 0) { showInputError(inp); return; }
+  if (amount > Game.money) { notify("У вас только " + fmtMoney(Game.money) + " ₽", "error"); return; }
+  var loan = Game.loans[idx];
+  var pay = Math.min(amount, loan.remaining);
+  loan.remaining -= pay; Game.money -= pay; inp.value = "";
+  if (loan.remaining <= 1) closeLoan(idx, 5);
+  notify("Оплачено " + fmtMoney(pay) + " ₽", "success");
+  refreshUI();
+}
+function closeLoan(idx, scoreBonus) {
+  var loan = Game.loans[idx];
+  for (var i = 0; i < Game.properties.length; i++) {
+    if (Game.properties[i].mortgage === loan) Game.properties[i].mortgage = null;
+  }
+  Game.loans.splice(idx, 1);
+  Game.creditScore = Math.min(100, Game.creditScore + scoreBonus);
+  checkAchievements();
+}
+function buyUpgrade(idx) {
+  var u = Game.upgradeShop[idx];
+  if (u.level >= u.max) return;
+  var cost = Math.floor(u.baseCost * Math.pow(u.growth, u.level));
+  if (Game.money < cost) { notify("Нужно " + fmtMoney(cost) + " ₽", "error"); return; }
+  Game.money -= cost; u.level++;
+  if (u.id === "income_mult") Game.upgrades.incomeMult = 1 + 0.1 * u.level;
+  else if (u.id === "offshore") Game.upgrades.upkeepMult = Math.max(0, 1 - 0.2 * u.level);
+  else if (u.id === "credit_score") {
+    Game.upgrades.creditScoreBonus = 5 * u.level;
+    Game.creditScore = Math.min(100, Game.creditScore + 5);
+  }
+  else if (u.id === "casino_luck") Game.upgrades.casinoLuck = u.level;
+  else if (u.id === "insider") Game.upgrades.insider = true;
+  else if (u.id === "fast_trade") Game.upgrades.fastTrade = true;
+  else if (u.id === "auto_trader") Game.upgrades.autoTrader = true;
+  notify(u.name + " → ур. " + u.level, "success");
+  refreshUI();
+}
+
+// КАЗИНО (с задержкой результата — сохранено)
+function getCasinoBet() {
+  var inp = document.getElementById("casino-bet-input");
+  if (inp) Game.casinoBet = parseNum(inp.value);
+  var bet = Math.floor(Game.casinoBet);
+  if (bet <= 0) { notify("Введите ставку больше 0", "error"); return null; }
+  if (bet > Game.money) { notify("Недостаточно денег", "error"); return null; }
+  return bet;
+}
+function setBet(v) {
+  Game.casinoBet = Math.floor(v);
+  var inp = document.getElementById("casino-bet-input");
+  if (inp) inp.value = Game.casinoBet;
+  refreshUI();
+}
+function setBetMax() {
+  Game.casinoBet = Math.floor(Game.money);
+  var inp = document.getElementById("casino-bet-input");
+  if (inp) inp.value = Game.casinoBet;
+  refreshUI();
+}
+function regCasino(bet, payout) {
+  Game.casinoStats.bet += bet;
+  Game.casinoStats.gamesPlayed++;
+  var net = payout - bet;
+  if (net > 0) {
+    Game.casinoStats.won += net;
+    if (net > Game.casinoStats.biggestWin) Game.casinoStats.biggestWin = net;
+  } else Game.casinoStats.lost += -net;
+}
+var rouletteSpinning = false;
+function playRoulette(choice) {
+  if (rouletteSpinning) return;
+  var bet = getCasinoBet();
+  if (!bet) return;
+  rouletteSpinning = true;
+  Game.money -= bet;
+  var resEl = document.getElementById("roulette-result");
+  var infoEl = document.getElementById("roulette-info");
+  if (resEl) {
+    resEl.classList.add("spin");
+    resEl.innerHTML = '<span class="roulette-num" style="font-size:72px">🎡</span>';
+  }
+  if (infoEl) { infoEl.textContent = "🎡 Крутим барабан..."; infoEl.style.color = "#ffd700"; }
+  var count = 0;
+  var maxAnim = 15;
+  var interval = setInterval(function() {
+    count++;
+    if (resEl) {
+      var tmp = Math.floor(Math.random() * 37);
+      var col = tmp === 0 ? "#1db954" : (tmp % 2 === 0 ? "#ff3344" : "#888");
+      resEl.innerHTML = '<span class="roulette-num" style="color:' + col + '">' + tmp + '</span>';
+    }
+    if (count >= maxAnim) {
+      clearInterval(interval);
+      showRouletteWait(choice, bet);
+    }
+  }, 200);
+}
+function showRouletteWait(choice, bet) {
+  var resEl = document.getElementById("roulette-result");
+  var infoEl = document.getElementById("roulette-info");
+  if (resEl) {
+    resEl.classList.remove("spin");
+    resEl.innerHTML = '<span class="roulette-num" style="font-size:60px">⏳</span>';
+    resEl.style.color = "#ffd700";
+  }
+  if (infoEl) { infoEl.textContent = "⏳ Останавливаем барабан..."; infoEl.style.color = "#ffd700"; }
+  setTimeout(function() { finalizeRoulette(choice, bet); }, 1200);
+}
+function finalizeRoulette(choice, bet) {
+  var num = Math.floor(Math.random() * 37);
+  var reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  var color = num === 0 ? "zero" : (reds.indexOf(num) !== -1 ? "red" : "black");
+  function checkWin(n, c) {
+    if (choice === "red" && c === "red") return 2;
+    if (choice === "black" && c === "black") return 2;
+    if (choice === "zero" && c === "zero") return 14;
+    if (choice === "even" && n !== 0 && n % 2 === 0) return 2;
+    return 0;
+  }
+  var mult = checkWin(num, color);
+  if (mult === 0 && Game.upgrades.casinoLuck > 0 && Math.random() < Game.upgrades.casinoLuck / 100) {
+    num = Math.floor(Math.random() * 37);
+    color = num === 0 ? "zero" : (reds.indexOf(num) !== -1 ? "red" : "black");
+    mult = checkWin(num, color);
+  }
+  var resEl = document.getElementById("roulette-result");
+  var infoEl = document.getElementById("roulette-info");
+  if (resEl) {
+    var ico = num === 0 ? "🟢" : (color === "red" ? "🔴" : "⚫");
+    var col = num === 0 ? "#1db954" : (color === "red" ? "#ff3344" : "#aaa");
+    resEl.innerHTML = '<span class="roulette-num" style="color:' + col + '">' + ico + ' ' + num + '</span>';
+  }
+  if (mult > 0) {
+    var payout = bet * mult;
+    Game.money += payout;
+    regCasino(bet, payout);
+    if (infoEl) { infoEl.textContent = "🎉 ВЫИГРЫШ +" + fmtMoney(payout - bet) + " ₽ (×" + mult + ")"; infoEl.style.color = "#7CFC00"; }
+  } else {
+    regCasino(bet, 0);
+    if (infoEl) { infoEl.textContent = "😢 Проигрыш −" + fmtMoney(bet) + " ₽"; infoEl.style.color = "#e53170"; }
+  }
+  rouletteSpinning = false;
+  checkAchievements(); refreshUI();
+}
+function newDeck() {
+  var ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  var suits = ["♠","♥","♦","♣"];
+  var deck = [];
+  for (var s = 0; s < suits.length; s++) {
+    for (var r = 0; r < ranks.length; r++) deck.push({ rank: ranks[r], suit: suits[s] });
+  }
+  for (var i = deck.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
+  }
+  return deck;
+}
+function cardValue(card) {
+  var r = card.rank;
+  if (r === "A") return 11;
+  if (r === "K" || r === "Q" || r === "J" || r === "10") return 10;
+  return parseInt(r, 10);
+}
+function handValue(hand) {
+  var total = 0, aces = 0;
+  for (var i = 0; i < hand.length; i++) {
+    total += cardValue(hand[i]);
+    if (hand[i].rank === "A") aces++;
+  }
+  while (total > 21 && aces > 0) { total -= 10; aces--; }
+  return total;
+}
+function renderCardHtml(card, hidden) {
+  if (hidden) return '<div class="playing-card back"></div>';
+  var isRed = card.suit === "♥" || card.suit === "♦";
+  return '<div class="playing-card ' + (isRed ? "red" : "black") + '">' +
+    '<span class="card-rank">' + card.rank + '</span>' +
+    '<span class="card-suit-big">' + card.suit + '</span>' +
+    '<span class="card-suit-small">' + card.suit + '</span>' +
+  '</div>';
+}
+function renderHandHtml(hand, hiddenIdx) {
+  var html = "";
+  for (var i = 0; i < hand.length; i++) html += renderCardHtml(hand[i], i === hiddenIdx);
+  return html;
+}
+function bjDeal() {
+  if (Game.bjState.active) return;
+  var bet = getCasinoBet();
+  if (!bet) return;
+  Game.money -= bet;
+  Game.bjState = { bet: bet, active: true, revealed: false, deck: newDeck(), player: [], dealer: [] };
+  Game.bjState.player = [Game.bjState.deck.pop(), Game.bjState.deck.pop()];
+  Game.bjState.dealer = [Game.bjState.deck.pop(), Game.bjState.deck.pop()];
+  if (handValue(Game.bjState.player) === 21) { bjFinish("🎉 Блэкджек! ×2.5", 2.5); return; }
+  refreshUI();
+  var st = document.getElementById("bj-status");
+  if (st) st.textContent = "Ваш ход — Взять или Хватит";
+}
+function bjHit() {
+  if (!Game.bjState.active) return;
+  Game.bjState.player.push(Game.bjState.deck.pop());
+  var pv = handValue(Game.bjState.player);
+  if (pv > 21) {
+    var st = document.getElementById("bj-status");
+    if (st) st.innerHTML = '<span class="waiting-result">💀 Перебор...</span>';
+    setTimeout(function() { bjFinish("💀 Перебор (" + pv + ")", 0); }, 1200);
+  } else refreshUI();
+}
+function bjStand() {
+  if (!Game.bjState.active) return;
+  Game.bjState.revealed = true;
+  var d = Game.bjState.dealer;
+  var step = 0;
+  function nextCard() {
+    if (handValue(d) < 17) {
+      d.push(Game.bjState.deck.pop());
+      refreshUI();
+      step++;
+      setTimeout(nextCard, 700);
+    } else {
+      setTimeout(finalizeBjStand, 700);
+    }
+  }
+  setTimeout(nextCard, 500);
+}
+function finalizeBjStand() {
+  var pv = handValue(Game.bjState.player);
+  var dv = handValue(Game.bjState.dealer);
+  var msg, mult;
+  if (dv > 21) { msg = "🎉 Дилер перебрал! ×2"; mult = 2; }
+  else if (pv > dv) { msg = "🎉 Ваши " + pv + " > " + dv + " ×2"; mult = 2; }
+  else if (pv === dv) { msg = "🤝 Ничья"; mult = 1; }
+  else { msg = "😢 Дилер " + dv + " > " + pv; mult = 0; }
+  var st = document.getElementById("bj-status");
+  if (st) st.innerHTML = '<span class="waiting-result">⏳ Подсчёт результата...</span>';
+  setTimeout(function() { bjFinish(msg, mult); }, 1000);
+}
+function bjFinish(msg, mult) {
+  var bet = Game.bjState.bet;
+  Game.bjState.active = false;
+  Game.bjState.revealed = true;
+  if (mult === 1) { Game.money += bet; regCasino(bet, bet); msg += " +0 ₽"; }
+  else if (mult > 1) {
+    var payout = Math.floor(bet * mult);
+    Game.money += payout; regCasino(bet, payout);
+    msg += " +" + fmtMoney(payout - bet) + " ₽";
+  } else { regCasino(bet, 0); msg += " −" + fmtMoney(bet) + " ₽"; }
+  checkAchievements(); refreshUI();
+  setTimeout(function() {
+    var el = document.getElementById("bj-status");
+    if (el) { el.textContent = msg; el.style.color = mult > 0 ? "#7CFC00" : "#e53170"; }
+  }, 10);
+}
+var slotSpinning = false;
+function playSlots() {
+  if (slotSpinning) return;
+  var bet = getCasinoBet();
+  if (!bet) return;
+  slotSpinning = true;
+  Game.money -= bet;
+  var syms = ["🍒","🍋","🔔","💎","7️⃣","⭐"];
+  var reels = document.querySelectorAll(".reel");
+  for (var i = 0; i < reels.length; i++) {
+    reels[i].classList.remove("win"); reels[i].classList.add("spin");
+  }
+  var resEl = document.getElementById("slots-result");
+  if (resEl) { resEl.textContent = "🎰 Крутим..."; resEl.style.color = "#ffd700"; }
+  var count = 0;
+  var interval = setInterval(function() {
+    for (var i = 0; i < reels.length; i++) reels[i].textContent = syms[Math.floor(Math.random() * syms.length)];
+    count++;
+    if (count >= 25) { clearInterval(interval); showSlotsWait(bet, syms); }
+  }, 100);
+}
+function showSlotsWait(bet, syms) {
+  var reels = document.querySelectorAll(".reel");
+  for (var i = 0; i < reels.length; i++) reels[i].classList.remove("spin");
+  var result = [syms[Math.floor(Math.random()*6)], syms[Math.floor(Math.random()*6)], syms[Math.floor(Math.random()*6)]];
+  if (Game.upgrades.casinoLuck > 0 && Math.random() < Game.upgrades.casinoLuck / 200) result = [result[0], result[0], result[0]];
+  for (var j = 0; j < reels.length; j++) reels[j].textContent = "⏳";
+  var resEl = document.getElementById("slots-result");
+  if (resEl) { resEl.textContent = "⏳ Останавливаем барабаны..."; resEl.style.color = "#ffd700"; }
+  setTimeout(function() {
+    var revealStep = 0;
+    function revealNext() {
+      if (revealStep >= 3) { setTimeout(function() { showSlotsFinal(bet, result); }, 600); return; }
+      reels[revealStep].textContent = result[revealStep];
+      reels[revealStep].classList.add("win");
+      revealStep++;
+      setTimeout(revealNext, 400);
+    }
+    revealNext();
+  }, 1200);
+}
+function showSlotsFinal(bet, result) {
+  var mult = 0, msg = "";
+  if (result[0] === result[1] && result[1] === result[2]) {
+    if (result[0] === "7️⃣") { mult = 50; msg = "🎉🎉🎉 ДЖЕКПОТ ×50!"; }
+    else if (result[0] === "💎") { mult = 20; msg = "💎💎💎 ×20!"; }
+    else { mult = 5; msg = result[0] + " ×3 = ×5!"; }
+  } else if (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]) { mult = 1.5; msg = "2 совпадения ×1.5"; }
+  else msg = "Без совпадений";
+  var resEl = document.getElementById("slots-result");
+  if (mult > 0) {
+    var payout = Math.floor(bet * mult);
+    Game.money += payout; regCasino(bet, payout);
+    if (resEl) { resEl.textContent = msg + "  +" + fmtMoney(payout - bet) + " ₽"; resEl.style.color = "#7CFC00"; }
+  } else {
+    regCasino(bet, 0);
+    if (resEl) { resEl.textContent = msg + "  −" + fmtMoney(bet) + " ₽"; resEl.style.color = "#e53170"; }
+  }
+  slotSpinning = false;
+  checkAchievements(); refreshUI();
+}
+
+// Достижения
+function hasAchv(id) { return Game.achievements.indexOf(id) !== -1; }
+function addAchv(id) {
+  if (hasAchv(id)) return;
+  Game.achievements.push(id);
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    if (ACHIEVEMENTS[i].id === id) {
+      notify("🏆 " + ACHIEVEMENTS[i].icon + " " + ACHIEVEMENTS[i].name, "success", 4000);
+      break;
+    }
+  }
+}
+function checkAchievements() {
+  if (!hasAchv("first_biz")) for (var i = 0; i < Game.businesses.length; i++) if (Game.businesses[i].level > 0) { addAchv("first_biz"); break; }
+  if (!hasAchv("manager")) for (var j = 0; j < Game.businesses.length; j++) if (Game.businesses[j].hasManager) { addAchv("manager"); break; }
+  if (!hasAchv("millionaire") && (Game.money >= 1e6 || Game.totalEarned >= 1e6)) addAchv("millionaire");
+  if (!hasAchv("billionaire") && (Game.money >= 1e9 || Game.totalEarned >= 1e9)) addAchv("billionaire");
+  if (!hasAchv("crypto")) for (var k = 0; k < Game.assets.length; k++) if (Game.assets[k].kind === "crypto" && Game.assets[k].amount > 0) { addAchv("crypto"); break; }
+  if (!hasAchv("trader")) for (var l = 0; l < Game.assets.length; l++) if (Game.assets[l].kind === "stock" && Game.assets[l].amount > 0) { addAchv("trader"); break; }
+  if (!hasAchv("landlord")) for (var m = 0; m < Game.properties.length; m++) if (Game.properties[m].owned) { addAchv("landlord"); break; }
+  if (!hasAchv("credit") && (Game.loans.length > 0 || Game.bankruptcyCount > 0)) addAchv("credit");
+  if (!hasAchv("gambler") && Game.casinoStats.bet > 0) addAchv("gambler");
+  if (!hasAchv("jackpot") && Game.casinoStats.biggestWin >= 5000000) addAchv("jackpot");
+  if (!hasAchv("bankrupt") && Game.bankruptcyCount > 0) addAchv("bankrupt");
+  if (!hasAchv("empire")) {
+    var c = 0;
+    for (var n = 0; n < Game.businesses.length; n++) if (Game.businesses[n].level > 0) c++;
+    if (c >= 5) addAchv("empire");
+  }
+  if (!hasAchv("space") && Game.businesses[8] && Game.businesses[8].level > 0) addAchv("space");
+  if (!hasAchv("tycoon") && Game.businesses[9] && Game.businesses[9].level > 0) addAchv("tycoon");
+  if (!hasAchv("debtfree") && Game.loans.length === 0 && Game.bankruptcyCount > 0) addAchv("debtfree");
+  if (!hasAchv("first_car")) for (var o = 0; o < Game.cars.length; o++) if (Game.cars[o].owned) { addAchv("first_car"); break; }
+  if (!hasAchv("collector")) {
+    var cc = 0;
+    for (var p = 0; p < Game.cars.length; p++) if (Game.cars[p].owned) cc++;
+    if (cc >= 5) addAchv("collector");
+  }
+  if (!hasAchv("legend")) for (var q = 0; q < Game.cars.length; q++) if (Game.cars[q].owned && Game.cars[q].rarity === "legendary") { addAchv("legend"); break; }
+  if (!hasAchv("mythic_car")) for (var r = 0; r < Game.cars.length; r++) if (Game.cars[r].owned && Game.cars[r].rarity === "mythic") { addAchv("mythic_car"); break; }
+}
+
+function notify(text, type, dur) {
+  type = type || "info"; dur = dur || 3000;
+  var c = document.getElementById("notifications");
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "notif " + type;
+  el.textContent = text;
+  c.appendChild(el);
+  setTimeout(function() {
+    el.style.transition = "opacity 0.3s, transform 0.3s";
+    el.style.opacity = "0";
+    el.style.transform = "translateX(400px)";
+    setTimeout(function() { el.remove(); }, 300);
+  }, dur);
+}
+function showConfirm(text, onOk) {
+  var ov = document.createElement("div");
+  ov.className = "modal-overlay";
+  ov.innerHTML = '<div class="modal"><p style="white-space:pre-line;color:#fff">' + escHtml(text) + '</p>' +
+    '<div class="modal-buttons"><button class="modal-btn cancel" type="button">Отмена</button>' +
+    '<button class="modal-btn ok" type="button">OK</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector(".ok").onclick = function() { ov.remove(); if (onOk) onOk(); };
+  ov.querySelector(".cancel").onclick = function() { ov.remove(); };
+}
+function showInfo(title, html) {
+  var ov = document.createElement("div");
+  ov.className = "modal-overlay";
+  ov.innerHTML = '<div class="modal"><h3>' + escHtml(title) + '</h3><div style="color:#94a1b2;font-size:13px;line-height:1.6">' + html + '</div>' +
+    '<div class="modal-buttons"><button class="modal-btn ok" type="button">Понятно</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector(".ok").onclick = function() { ov.remove(); };
+}
+
+// СОХРАНЕНИЕ
+function saveGame() {
+  try {
+    var data = {
+      version: "html-1.2", savedAt: new Date().toISOString(),
+      money: Game.money, totalEarned: Game.totalEarned,
+      creditScore: Game.creditScore, bankruptcyCount: Game.bankruptcyCount,
+      achievements: Game.achievements, casinoStats: Game.casinoStats,
+      upgrades: Game.upgrades,
+      upgradeLevels: Game.upgradeShop.map(function(u) { return { id: u.id, level: u.level }; }),
+      businesses: Game.businesses.map(function(b) { return { level: b.level, hasManager: b.hasManager }; }),
+      assets: Game.assets.map(function(a) { return { ticker: a.ticker, amount: a.amount, avgBuy: a.avgBuy, price: a.price, basePrice: a.basePrice, history: a.history.slice(-40) }; }),
+      loans: Game.loans,
+      properties: Game.properties.map(function(p) { return { propId: p.propId, owned: p.owned, tenant: p.tenant, currentPrice: p.currentPrice, mortgage: p.mortgage }; }),
+      cars: Game.cars.map(function(c) { return { carId: c.carId, owned: c.owned, tuned: c.tuned, currentPrice: c.currentPrice, purchasedAt: c.purchasedAt }; }),
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    return true;
+  } catch (e) { console.error("Save error:", e); return false; }
+}
+function loadGame() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    var d = JSON.parse(raw);
+    Game.reset();
+    Game.money = d.money !== undefined ? d.money : START_MONEY;
+    Game.totalEarned = d.totalEarned || 0;
+    Game.creditScore = d.creditScore !== undefined ? d.creditScore : 50;
+    Game.bankruptcyCount = d.bankruptcyCount || 0;
+    Game.achievements = d.achievements || [];
+    Game.casinoStats = d.casinoStats || { bet:0, won:0, lost:0, biggestWin:0, gamesPlayed:0 };
+    if (d.upgrades) for (var k in d.upgrades) if (d.upgrades.hasOwnProperty(k)) Game.upgrades[k] = d.upgrades[k];
+    if (d.upgradeLevels) for (var i = 0; i < d.upgradeLevels.length; i++)
+      for (var j = 0; j < Game.upgradeShop.length; j++)
+        if (Game.upgradeShop[j].id === d.upgradeLevels[i].id) Game.upgradeShop[j].level = d.upgradeLevels[i].level;
+    if (d.businesses) for (var a = 0; a < d.businesses.length && a < Game.businesses.length; a++) {
+      Game.businesses[a].level = d.businesses[a].level || 0;
+      Game.businesses[a].hasManager = d.businesses[a].hasManager || false;
+    }
+    if (d.assets) for (var b = 0; b < d.assets.length; b++)
+      for (var c = 0; c < Game.assets.length; c++)
+        if (Game.assets[c].ticker === d.assets[b].ticker) {
+          Game.assets[c].amount = d.assets[b].amount || 0;
+          Game.assets[c].avgBuy = d.assets[b].avgBuy || 0;
+          Game.assets[c].price = d.assets[b].price || Game.assets[c].price;
+          Game.assets[c].basePrice = d.assets[b].basePrice || Game.assets[c].basePrice;
+          if (d.assets[b].history) Game.assets[c].history = d.assets[b].history;
+          break;
+        }
+    if (d.loans) Game.loans = d.loans;
+    if (d.properties) for (var e = 0; e < d.properties.length; e++)
+      for (var f = 0; f < Game.properties.length; f++)
+        if (Game.properties[f].propId === d.properties[e].propId) {
+          Game.properties[f].owned = d.properties[e].owned || false;
+          Game.properties[f].tenant = d.properties[e].tenant || false;
+          Game.properties[f].currentPrice = d.properties[e].currentPrice || Game.properties[f].price;
+          Game.properties[f].mortgage = d.properties[e].mortgage || null;
+          break;
+        }
+    if (d.cars) for (var g = 0; g < d.cars.length; g++)
+      for (var h = 0; h < Game.cars.length; h++)
+        if (Game.cars[h].carId === d.cars[g].carId) {
+          Game.cars[h].owned = d.cars[g].owned || false;
+          Game.cars[h].tuned = d.cars[g].tuned || false;
+          Game.cars[h].currentPrice = d.cars[g].currentPrice || Game.cars[h].price;
+          Game.cars[h].purchasedAt = d.cars[g].purchasedAt || null;
+          break;
+        }
+    return true;
+  } catch (e) { console.error("Load error:", e); return false; }
+}
+
+// ИГРОВОЙ ЦИКЛ
+var EVENTS = [
+  { name: "📉 Кризис в экономике!",     value: 0.5, dur: 30, type: "income" },
+  { name: "📈 Экономический бум!",      value: 1.8, dur: 30, type: "income" },
+  { name: "🏛️ Налоговая проверка!",     value: 0.15, dur: 0, type: "money" },
+  { name: "🎉 Реклама сработала!",      value: 1.5, dur: 20, type: "income" },
+  { name: "⛔ Забастовка сотрудников!", value: 0.3, dur: 20, type: "income" }
+];
+var activeEvent = null, eventEndTime = 0;
+var nextEventTime = Date.now() + 90000;
+var gameActive = false;
+function triggerEvent() {
+  var ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  var bar = document.getElementById("event-bar");
+  if (ev.type === "money") {
+    var loss = Game.money > 0 ? Game.money * ev.value : 0;
+    Game.money -= loss;
+    if (bar) { bar.textContent = ev.name + " −" + fmtMoney(loss) + " ₽"; bar.className = "event-bar active"; }
+    setTimeout(function() { if (!activeEvent && bar) { bar.textContent = ""; bar.className = "event-bar"; } }, 5000);
+  } else {
+    activeEvent = ev; eventEndTime = Date.now() + ev.dur * 1000;
+    if (bar) { bar.textContent = ev.name + " (" + ev.dur + "с)"; bar.className = "event-bar " + (ev.value < 1 ? "active" : "positive"); }
+  }
+}
+function gauss(mean, std) {
+  var u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return mean + std * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function gameLoop() {
+  var now = Date.now();
+  var dt = Math.min((now - Game.lastTick) / 1000, 2);
+  Game.lastTick = now;
+  if (gameActive) {
+    var net = totalIncome() - totalUpkeep();
+    if (net !== 0) { Game.money += net * dt; if (net > 0) Game.totalEarned += net * dt; }
+    if (now - Game.lastAssetTick >= 1000) {
+      for (var i = 0; i < Game.assets.length; i++) {
+        var a = Game.assets[i];
+        var noise = gauss(0, a.vol);
+        var pull = ((a.basePrice - a.price) / a.basePrice) * 0.02;
+        a.price *= (1 + noise + pull);
+        a.price = Math.max(a.basePrice * 0.1, a.price);
+        a.history.push(a.price);
+        if (a.history.length > 40) a.history.shift();
+      }
+      Game.lastAssetTick = now;
+    }
+    if (now - Game.lastPropertyTick >= 1000) {
+      for (var j = 0; j < Game.properties.length; j++) {
+        var p = Game.properties[j];
+        var daily = p.appPct / 100 / 365;
+        p.currentPrice *= (1 + daily + gauss(0, 0.0003));
+        p.currentPrice = Math.max(p.price * 0.3, p.currentPrice);
+      }
+      Game.lastPropertyTick = now;
+    }
+    if (now - Game.lastCarTick >= 1000) {
+      for (var k = 0; k < Game.cars.length; k++) {
+        var c = Game.cars[k];
+        if (c.owned && c.purchasedAt) {
+          var dailyGrowth = c.growthPct / 100 / 365;
+          var perSec = dailyGrowth / 60;
+          c.currentPrice *= (1 + perSec);
+          c.currentPrice = Math.floor(c.currentPrice);
+        }
+      }
+      Game.lastCarTick = now;
+    }
+    if (now - Game.lastLoanTick >= 60000) {
+      var days = Math.floor((now - Game.lastLoanTick) / 60000);
+      for (var dd = 0; dd < days; dd++) {
+        for (var l = 0; l < Game.loans.length; l++) {
+          var loan = Game.loans[l];
+          var pay = Math.min(loan.dailyPayment, loan.remaining);
+          loan.remaining -= pay; Game.money -= pay;
+        }
+        for (var ri = Game.loans.length - 1; ri >= 0; ri--) {
+          if (Game.loans[ri].remaining <= 1) {
+            var closed = Game.loans[ri];
+            for (var pi = 0; pi < Game.properties.length; pi++)
+              if (Game.properties[pi].mortgage === closed) Game.properties[pi].mortgage = null;
+            Game.loans.splice(ri, 1);
+            Game.creditScore = Math.min(100, Game.creditScore + 3);
+          }
+        }
+      }
+      Game.lastLoanTick = now;
+    }
+    if (Game.money < 0 && !Game.inNegative) {
+      Game.inNegative = true; Game.bankruptcyCount++;
+      Game.creditScore = Math.max(0, Game.creditScore - 15);
+      notify("🚨 Ушли в минус!", "error");
+    } else if (Game.money >= 0 && Game.inNegative) Game.inNegative = false;
+    if (activeEvent && now >= eventEndTime) {
+      activeEvent = null;
+      var bar = document.getElementById("event-bar");
+      if (bar) { bar.textContent = ""; bar.className = "event-bar"; }
+    }
+    if (now >= nextEventTime) { triggerEvent(); nextEventTime = now + 90000 + Math.random() * 90000; }
+    if (now - Game.lastSave > 10000) { saveGame(); Game.lastSave = now; }
+    updateTopBar();
+    if (Game.currentTab === "market") for (var n = 0; n < Game.assets.length; n++) drawGraph("graph-" + n, Game.assets[n]);
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// МЕНЮ
+function initMenu() {
+  var raw = localStorage.getItem(SAVE_KEY);
+  var btnC = document.getElementById("btn-continue");
+  var info = document.getElementById("save-info");
+  if (raw) {
+    try {
+      var d = JSON.parse(raw);
+      btnC.disabled = false;
+      var date = d.savedAt ? new Date(d.savedAt).toLocaleString("ru-RU") : "—";
+      var bizCount = (d.businesses || []).filter(function(b) { return b.level > 0; }).length;
+      var carCount = (d.cars || []).filter(function(c) { return c.owned; }).length;
+      info.innerHTML = "💾 Сохранение: " + date + "<br>Баланс: " + fmtMoney(d.money || 0) + " ₽<br>Бизнесов: " + bizCount + " | Машин: " + carCount;
+    } catch (e) { btnC.disabled = true; info.textContent = "💾 Сохранение повреждено."; }
+  } else {
+    btnC.disabled = true;
+    info.textContent = "💾 Сохранений нет. Начните новую игру!";
+  }
+}
+function startGame() {
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("game").classList.add("active");
+  gameActive = true;
+  Game.lastTick = Date.now(); Game.lastAssetTick = Date.now();
+  Game.lastPropertyTick = Date.now(); Game.lastCarTick = Date.now();
+  Game.lastLoanTick = Date.now(); Game.lastSave = Date.now();
+  nextEventTime = Date.now() + 90000;
+  switchTab("businesses");
+  refreshUI();
+}
+function backToMenu() {
+  showConfirm("Сохранить и выйти в меню?", function() {
+    saveGame();
+    gameActive = false;
+    document.getElementById("game").classList.remove("active");
+    document.getElementById("menu").style.display = "flex";
+    initMenu();
+  });
+}
+function init() {
+  console.log("Business Empire HTML — init");
+  document.getElementById("btn-new").onclick = function() {
+    if (localStorage.getItem(SAVE_KEY) && !confirm("Есть сохранение. Начать новую игру?")) return;
+    localStorage.removeItem(SAVE_KEY);
+    Game.reset(); saveGame(); startGame();
+  };
+  document.getElementById("btn-continue").onclick = function() {
+    if (!loadGame()) Game.reset();
+    startGame();
+  };
+  document.getElementById("btn-help").onclick = function() {
+    showInfo("📖 Как играть",
+      "🏢 <b>БИЗНЕСЫ</b> — покупайте и качайте. Менеджер даёт доход в фоне.<br><br>" +
+      "📈 <b>БИРЖА</b> — вымышленная крипта и акции. Можно вводить 5, 100, 1.5M, 2K.<br><br>" +
+      "🏠 <b>НЕДВИЖИМОСТЬ</b> — аренда + ипотека 18%.<br><br>" +
+      "🚗 <b>ГАРАЖ</b> — коллекция уникальных машин с SVG-иконками. Цены растут.<br><br>" +
+      "🏦 <b>БАНКИ</b> — 6 банков (14.5%–189%). Автопогашение.<br><br>" +
+      "🎰 <b>КАЗИНО</b> — рулетка, блэкджек, слоты. Результат с задержкой.<br><br>" +
+      "💡 <b>СОВЕТ:</b> Начните с ларька за 50 000 ₽!");
+  };
+  document.getElementById("btn-exit").onclick = function() {
+    showConfirm("Закрыть игру?", function() {
+      window.close();
+      document.body.innerHTML = '<div style="color:#fff;font-family:sans-serif;text-align:center;padding:80px;font-size:20px">Спасибо за игру!</div>';
+    });
+  };
+  var tabs = document.querySelectorAll(".tab[data-tab]");
+  for (var i = 0; i < tabs.length; i++) {
+    (function(t) { t.onclick = function() { switchTab(t.getAttribute("data-tab")); }; })(tabs[i]);
+  }
+  document.getElementById("btn-back-menu").onclick = backToMenu;
+  document.getElementById("btn-save-top").onclick = function() { if (saveGame()) notify("💾 Сохранено!", "success"); };
+  document.getElementById("btn-reset-top").onclick = function() {
+    showConfirm("Сбросить прогресс?", function() {
+      localStorage.removeItem(SAVE_KEY);
+      Game.reset(); saveGame();
+      notify("Сброшено!", "success"); refreshUI();
+    });
+  };
+  window.addEventListener("beforeunload", function() { if (gameActive) saveGame(); });
+  initMenu();
+  gameLoop();
+  console.log("Ready");
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>
